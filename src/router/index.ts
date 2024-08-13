@@ -89,6 +89,29 @@ export const asyncRoutes = [
             }
         ]
     },
+    {
+        path: '/rule_maintenance_menu',
+        name: 'rule_maintenance_menu',
+        meta: {
+            auth: 'RULE_MAINTENANCE'
+        },
+        component: ()=> import('../views/layout/Index.vue'),
+        redirect: "/rule_maintenance",
+        isMenu: true,
+        funcNode:1,
+        children: [
+            {
+                path: '/rule_maintenance',
+                name: 'rule_maintenance',
+                meta: {
+                    title: '规则维护',
+                    icon: 'Management',
+                    auth: 'RULE_MAINTENANCE'
+                },
+                component: ()=> import('../views/ruleMaintenance/RuleMaintenance.vue')
+            }
+        ]
+    },
 ]
 
 // 创建静态路由实例 createRouter -> Hash Mode
@@ -111,7 +134,7 @@ router.beforeEach(async (to, from, next) => {
     // if(!userStore.token)return next({path:`/login?redirect=${to.path}`,replace:true})
 
     // 获取登录用户的权限列表
-    const authList = ['PARAM_CLASSIFY', 'PARAM_CHECK']
+    const authList = ['PARAM_CLASSIFY', 'PARAM_CHECK', 'RULE_MAINTENANCE']
 
     // 根据权限列表动态生成路由访问映射
     const menuStore = useMenuStore()

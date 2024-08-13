@@ -1,6 +1,6 @@
 <template>
   <el-dropdown trigger="hover">
-    <el-button size="small" color="#333333">
+    <el-button size="small" color="#484848">
       <span>更多</span>
       <el-icon class="el-icon--right"><arrow-down /></el-icon>
     </el-button>
