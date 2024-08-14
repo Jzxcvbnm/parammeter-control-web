@@ -9,6 +9,15 @@ export function uploadConfig(data) {
     })
 }
 
+// 上传代码地址
+export function uploadCodeUrl(data) {
+    return request({
+        url: '/param_info/code_url',
+        method: 'post',
+        data
+    })
+}
+
 // 获取参数信息
 export function getParamInfoAll() {
     return request({
@@ -27,6 +36,14 @@ export function getParamInfo(data) {
     })
 }
 
+// 新增参数信息
+export function addParamInfo(data) {
+    return request({
+        url: '/paramClass/addParamInfo',
+        method: 'post',
+        data
+    })
+}
 
 // 修改参数信息
 export function updateParamInfo(data) {
@@ -46,10 +63,19 @@ export function deleteParamInfo(data) {
     })
 }
 
-//获取分类树
-export function getTypeTree() {
+//获取变量分类
+export function getVarClassify() {
     return request({
-        url: '/type/getTypeTree',
+        url: '/type/category',
         method: 'get',
+    })
+}    
+
+//保存清单信息
+export function saveChecklist(data) {
+    return request({
+        url: '/param_info/checklist',
+        method: 'post',
+        data
     })
 }

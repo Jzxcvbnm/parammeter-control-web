@@ -65,7 +65,7 @@ const isCollapse = computed(() => !SettingStore.isCollapse)
   margin: 0;
   display: block;
   text-align: center;
-  background-color: #222222;
+  background-color: #00B890;
   color: white;
   text-decoration: none;
   padding: 10px;

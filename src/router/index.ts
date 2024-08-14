@@ -104,7 +104,7 @@ export const asyncRoutes = [
                 path: '/rule_maintenance',
                 name: 'rule_maintenance',
                 meta: {
-                    title: '规则维护',
+                    title: '类型维护',
                     icon: 'Management',
                     auth: 'RULE_MAINTENANCE'
                 },

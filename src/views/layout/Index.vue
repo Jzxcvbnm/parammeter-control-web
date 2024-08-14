@@ -47,6 +47,7 @@ import TopBar from './header/TopBar.vue';
 .el-main {
   background: #ffffff;
   border: 1px solid #efefef;
+  padding: 0;
 }
 .el-container {
   height: 100%;

@@ -3,9 +3,8 @@
     <!--头部 start-->
     <template #header>
       <div class="card-header">
-        <!--搜索区域 start-->
         <div class="card-search">
-          <el-row :gutter="10" style="margin-top: 10px;">
+          <el-row :gutter="10">
             <el-col span="6">
               <el-button type="primary" @click="uploadFile" color="#00B890">上传配置</el-button>
             </el-col>
@@ -14,7 +13,6 @@
             </el-col>
           </el-row>
         </div>
-        <!--搜索区域 end-->
       </div>
     </template>
     <!--头部 end-->
@@ -22,14 +20,17 @@
     <!-- <div class="table-box" v-if="showTable"> -->
     <div class="table-box">
       <el-row :gutter="10">
-        <el-col span="6" style="margin-bottom: 10px;">
+        <el-col :span="12" style="margin-bottom: 5px;">
           <el-input :prefix-icon="Search" v-model="paramValue" @keyup.enter="validateAndSearch"
             placeholder="查询参数（支持模糊查询）" style="width: 213px;" />
-        </el-col>
-        <el-col span="6" style="margin-bottom: 10px;">
+
           <el-button type="primary" @click="validateAndSearch" color="#00B890">查询</el-button>
-          <el-button type="primary" @click="searchAll" color="#00B890">全部查询</el-button>
           <el-button type="primary" @click="resetSearch" color="#00B890">重置</el-button>
+          <el-button type="primary" @click="paramAdd" color="#00B890">添加参数</el-button>
+        </el-col>
+
+        <el-col :span="12" style="margin-bottom: 5px; text-align: right;">
+          <el-button type="primary" @click="exportExcelData" color="#00B890" style="width: 125px;">导出excel文件</el-button>
         </el-col>
       </el-row>
       <!-- <el-table element-loading-text="数据加载中..." v-loading="loading" :data="tableData" -->
@@ -37,45 +38,6 @@
         style="width: 100%;text-align: center" :row-class-name="tableRowStatus"
         :default-sort="{ prop: 'Namespace_Name', order: 'ascending' }" :cell-style="{ textAlign: 'center' }"
         :header-cell-style="{ fontSize: '12px', background: '#484848', color: 'white', textAlign: 'center' }">
-
-        <el-table-column label="namespace" prop="Namespace_Name" sortable>
-          <template #default="scope">
-            <el-tooltip :content="scope.row.Namespace_Name" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.Namespace_Name }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="namespace类型">
-          <template #default="scope">
-            <el-tooltip :content="scope.row.Namespace_Type" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.Namespace_Type }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-        <el-table-column label="变量名称">
-          <template #default="scope">
-            <el-tooltip :content="scope.row.Variable_Name" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.Variable_Name }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="默认值">
-          <template #default="scope">
-            <el-tooltip :content="scope.row.Default_Value" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.Default_Value }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="变量描述">
-          <template #default="scope">
-            <el-tooltip :content="scope.row.Description" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.Description }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
 
         <el-table-column label="一级分类" sortable>
           <template #default="scope">
@@ -96,7 +58,31 @@
         <el-table-column label="参数状态" sortable>
           <template #default="scope">
             <el-tooltip :content="scope.row.status" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.status }}</span>
+              <span class="highlight">{{ statusMap[scope.row.status] }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="命名空间" prop="Namespace_Name" sortable>
+          <template #default="scope">
+            <el-tooltip :content="scope.row.Namespace_Name" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.Namespace_Name }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="变量名称">
+          <template #default="scope">
+            <el-tooltip :content="scope.row.Variable_Name" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.Variable_Name }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="变量描述">
+          <template #default="scope">
+            <el-tooltip :content="scope.row.Description" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.Description }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -104,7 +90,7 @@
         <el-table-column label="确认标志" sortable>
           <template #default="scope">
             <el-tooltip :content="scope.row.verify" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.verify }}</span>
+              <span class="highlight">{{ verifyMap[scope.row.verify] }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -152,6 +138,22 @@
   </el-dialog>
   <!-- 上传配置弹出框 end -->
 
+  <!-- 上传代码地址弹出框 start-->
+  <el-dialog title="上传代码地址" v-model="uploadUrlDialogVisible" width="40%">
+    <el-form>
+      <el-form-item label="代码地址">
+        <el-input v-model="codeUrl" placeholder="请输入代码仓库地址（如：https://gitee.com/xxx/xxx.git）"></el-input>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="uploadUrlDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmUploadUrl" color="#00B890">确认</el-button>
+      </span>
+    </template>
+  </el-dialog>
+  <!-- 上传代码地址弹出框 end -->
+
   <!-- 修改参数弹出框 start-->
   <el-dialog align-center v-model="editParamDialogFormVisible" width="42%" destroy-on-close>
     <template #header="{ close, titleId, titleClass }">
@@ -167,26 +169,63 @@
     <!--修改参数组件 end-->
   </el-dialog>
   <!--修改参数弹出框 end -->
+
+  <!-- 添加参数弹出框 start-->
+  <el-dialog align-center v-model="addParamDialogFormVisible" width="42%" destroy-on-close>
+    <template #header="{ close, titleId, titleClass }">
+      <div class="my-header">
+        <el-icon size="26px">
+          <EditPen />
+        </el-icon>
+        <h1 id="titleId">{{ addTitle }}</h1>
+      </div>
+    </template>
+    <!--添加参数组件 start-->
+    <ParamAdd :paramInfo="paramInfo" @closeAddParamForm="closeAddParamForm" @success="success" />
+    <!--添加参数组件 end-->
+  </el-dialog>
+  <!-- 添加参数弹出框 end -->
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, toRefs, ref } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElNotification, ElMessageBox } from 'element-plus'
-import { formatTime } from "../../utils/date"
-import { uploadConfig, getParamInfoAll, getParamInfo, deleteParamInfo } from '../../api/paramClass/paramClass';
+import { exportExcel } from "../../utils/exprotExcel"
+import { uploadConfig, uploadCodeUrl, getParamInfoAll, getParamInfo, deleteParamInfo } from '../../api/param/paramInfo';
 import ParamModify from './components/ParamModify.vue'
+import ParamAdd from './components/ParamAdd.vue'
 
+// 状态映射
+const statusMap = {
+  '0': '未启用',
+  '1': '生效',
+  '2': '作废'
+}
+
+// 标志映射
+const verifyMap = {
+  '0': '未确认',
+  '1': '已确认'
+}
 
 // 修改参数弹窗状态
 const editParamDialogFormVisible = ref(false)
 const editTitle = ref('修改参数信息')
+
+// 添加参数弹窗状态
+const addParamDialogFormVisible = ref(false)
+const addTitle = ref('添加参数信息')
 
 // 上传配置弹窗状态
 const uploadDialogVisible = ref(false)
 const filePath = ref('')
 const fileInput = ref(null)
 const selectedFile = ref(null)
+
+// 上传代码地址弹窗状态
+const uploadUrlDialogVisible = ref(false)
+const codeUrl = ref('')
 
 const state = reactive({
   // 搜索表单内容
@@ -202,7 +241,6 @@ const state = reactive({
   loading: false, // 数据加载
   showTable: false, // 控制表格显示
 
-  codeUrl: '', // 代码地址
 })
 
 // 获取参数列表数据
@@ -292,7 +330,7 @@ const resetSearch = () => {
   state.tableData = []
   // state.pageSize = 10 //每页显示行数
   // state.pageIndex = 1 //当前页码
-
+  loadData(state)
 }
 
 // 提交表单回调函数
@@ -336,9 +374,18 @@ const confirmUpload = async () => {
 
     selectedFile.value = null
     filePath.value = ''
+
+    loadData(state) // 上传成功后重新查询
+    ElMessage({
+      type: 'success',
+      message: '文件上传成功',
+    })
+
   } catch (error) {
     console.error('文件上传失败', error)
     uploadDialogVisible.value = false
+    selectedFile.value = null
+    filePath.value = ''
 
     ElMessage({
       type: 'error',
@@ -350,26 +397,60 @@ const confirmUpload = async () => {
 
 // 上传代码地址
 const uploadUrl = () => {
-
+  uploadUrlDialogVisible.value = true
 }
 
-// 修改参数信息
+const confirmUploadUrl = async () => {
+  if (!codeUrl.value) {
+    alert('请输入代码地址')
+    return
+  }
+  const params = {
+    'url': codeUrl.value,
+  }
+
+  try {
+    const response = await uploadCodeUrl(params)
+    console.log('代码地址上传成功', response)
+    uploadUrlDialogVisible.value = false
+    codeUrl.value = ''
+
+    loadData(state) // 上传成功后重新查询
+    ElMessage({
+      type: 'success',
+      message: '代码地址上传成功',
+    })
+
+  } catch (error) {
+    console.error('代码地址上传失败', error)
+    uploadUrlDialogVisible.value = false
+    codeUrl.value = ''
+
+    ElMessage({
+      type: 'error',
+      message: '代码地址上传失败',
+    })
+
+  }
+}
+
+// 参数信息
 const paramInfo = ref({
   paramId: '',// 参数ID
   Variable_Name: '',// 参数名称
-  Default_Value: '',// 参数值
   Description: '',// 参数描述
   type1: '',// 一级分类
   type2: '',// 二级分类
   status: '',// 参数状态
   verify: '',// 确认标志
 })
+
+// 修改参数信息
 const paramModify = async (row) => {
   editParamDialogFormVisible.value = true;
 
   paramInfo.value.paramId = row.paramId;
   paramInfo.value.Variable_Name = row.Variable_Name;
-  paramInfo.value.Default_Value = row.Default_Value;
   paramInfo.value.Description = row.Description;
   paramInfo.value.type1 = row.type1;
   paramInfo.value.type2 = row.type2;
@@ -377,12 +458,42 @@ const paramModify = async (row) => {
   paramInfo.value.verify = row.verify;
 }
 
-// 关闭修改用户弹出框
-const closeEditParamForm = () => {
-  editParamDialogFormVisible.value = false
+// 添加参数信息
+const paramAdd = () => {
+  addParamDialogFormVisible.value = true;
 }
 
-// 确认删除用户权限
+// 关闭修改参数弹出框
+const closeEditParamForm = () => {
+  editParamDialogFormVisible.value = false
+  // 重置表单数据
+  paramInfo.value = {
+    paramId: '',// 参数ID
+    Variable_Name: '',// 参数名称
+    Description: '',// 参数描述
+    type1: '',// 一级分类 
+    type2: '',// 二级分类
+    status: '',// 参数状态
+    verify: '',// 确认标志
+  }
+}
+
+// 关闭添加参数弹出框
+const closeAddParamForm = () => {
+  addParamDialogFormVisible.value = false
+  // 重置表单数据
+  paramInfo.value = {
+    paramId: '',// 参数ID
+    Variable_Name: '',// 参数名称
+    Description: '',// 参数描述
+    type1: '',// 一级分类 
+    type2: '',// 二级分类
+    status: '',// 参数状态
+    verify: '',// 确认标志
+  }
+}
+
+// 确认删除参数信息
 const paramDelete = (row) => {
   ElMessageBox.confirm(
     '此操作将删除该参数, 是否继续?',
@@ -417,6 +528,48 @@ const paramDelete = (row) => {
   })
 }
 
+// 导出列表
+const column = [
+  {
+    label: '一级分类',
+    name: 'type1',
+  },
+  {
+    label: '二级分类',
+    name: 'type2',
+  },
+  {
+    label: '参数状态',
+    name: 'status',
+  },
+  {
+    label: '命名空间',
+    name: 'Namespace_Name',
+  },
+  {
+    label: '参数名称',
+    name: 'Variable_Name',
+  },
+  {
+    label: '参数描述',
+    name: 'Description',
+  },
+  {
+    label: '确认标志',
+    name: 'verify',
+  },
+]
+// 导出excel
+const exportExcelData = () => {
+  exportExcel({
+    column,
+    data: state.tableData,
+    filename: '参数分类信息',
+    format: 'xlsx',
+    autoWidth: true,
+  })
+}
+
 // // 分页序号不乱
 // const Nindex = (index) => {
 //   // 当前页数 - 1 * 每页数据条数 + 1
@@ -442,7 +595,7 @@ onMounted(() => {
   loadData(state)
 })
 
-const { tableData, loading, paramValue, showTable, codeUrl } = toRefs(state)
+const { tableData, loading, paramValue, showTable } = toRefs(state)
 </script>
 
 <style scoped>
@@ -510,4 +663,4 @@ const { tableData, loading, paramValue, showTable, codeUrl } = toRefs(state)
 :deep(.el-loading-spinner .path) {
   stroke: #484848;
 }
-</style>./components/ParamModify.vue
+</style>

@@ -9,9 +9,15 @@
       </el-col>
 
       <el-col :span="12">
+        <el-form-item label="参数值" prop="Default_Value">
+          <el-input v-model="formParam.value_prod" placeholder="请输入参数值" />
+        </el-form-item>
+      </el-col>
+
+      <el-col :span="12">
         <el-form-item label="参数描述" prop="Description">
-          <el-input v-model="formParam.Description" type="textarea" :autosize="{ minRows: 2, maxRows: 4}"
-                placeholder="请输入参数描述" />
+          <el-input v-model="formParam.Description" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }"
+            placeholder="请输入参数描述" />
         </el-form-item>
       </el-col>
 
@@ -40,7 +46,7 @@
           </el-select>
         </el-form-item>
       </el-col>
-      
+
       <el-col :span="12">
         <el-form-item label="确认标志" prop="verify">
           <el-select v-model="formParam.verify" placeholder="请选择确认标志">
@@ -70,7 +76,7 @@ import { getTypeTree } from "../../../api/rule/ruleMaintenance"
 
 const emit = defineEmits(['closeEditParamForm', 'success'])
 
-const props = defineProps(['paramInfo'])
+const props = defineProps(['paramInfo', 'tableData', 'updateTableData'])
 const paramInfo = ref(props.paramInfo)
 
 const TypeOptions = ref([])
@@ -79,11 +85,12 @@ const subLoading = ref(false)
 const ruleFormRef = ref<FormInstance>()
 const formParam = reactive({
   paramId: '',// 参数ID
-  Variable_Name:'',// 参数名称
+  Variable_Name: '',// 参数名称
+  value_prod: '',// 参数值
   Description: '',// 参数描述
   type1: '',// 一级分类
   type2: '',// 二级分类
-  status:'',// 参数状态
+  status: '',// 参数状态
   verify: '',// 确认标志
 })
 // 给表单填充数据
@@ -92,6 +99,9 @@ for (const key in formParam) {
 }
 // 定义表单约束规则对象
 const rules = reactive<FormRules>({
+  value_prod: [
+    { required: true, message: '请输入参数值', trigger: 'blur' },
+  ],
   type1: [
     { required: true, message: '请选择一级分类', trigger: 'blur' },
   ],
@@ -112,20 +122,18 @@ const modifyParam = async (formEl: FormInstance | undefined) => {
   await formEl.validate(async (valid, fields) => {
     subLoading.value = true
     if (valid) {  // 表单验证通过
-      const { data } = await updateParamInfo(formParam)
-      if (data.code === 200) {
-        ElMessage.success(data.msg)
-        emit('success')
-      } else {
-        ElMessage.error(data.msg)
-      }
+      // 修改 tableData 中对应的数据
+      props.updateTableData(formParam.paramId, formParam);
+      ElMessage.success('修改成功');
+      emit('success');
     } else {
-      ElMessage.error('提交失败，你还有未填写的项！')
-      console.log('error submit!', fields)
+      ElMessage.error('提交失败，你还有未填写的项！');
+      console.log('error submit!', fields);
     }
-    subLoading.value = false
-  })
+    subLoading.value = false;
+  });
 }
+
 
 // 取消表单
 const close = () => {
@@ -138,21 +146,21 @@ const getTree = async () => {
   if (data.code === 200) {
     TypeOptions.value = treeDataTranslate(data.data)
   }
-  else{
+  else {
     ElMessage.error(data.msg)
     console.log('获取分类树失败')
   }
 }
 
-const typeChange = (value)=> {
-      if (value && value.length === 2) {
-        formParam.type1 = value[0];
-        formParam.type2 = value[1];
-      } else {
-        formParam.type1 = '';
-        formParam.type2 = '';
-      }
-    }
+const typeChange = (value) => {
+  if (value && value.length === 2) {
+    formParam.type1 = value[0];
+    formParam.type2 = value[1];
+  } else {
+    formParam.type1 = '';
+    formParam.type2 = '';
+  }
+}
 
 onMounted(async () => {
   getTree();

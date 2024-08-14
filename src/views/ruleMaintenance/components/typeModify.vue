@@ -9,6 +9,12 @@
       </el-col>
 
       <el-col :span="12">
+        <el-form-item label="参数值" prop="Default_Value">
+          <el-input v-model="formParam.Default_Value" placeholder="请输入参数值" />
+        </el-form-item>
+      </el-col>
+
+      <el-col :span="12">
         <el-form-item label="参数描述" prop="Description">
           <el-input v-model="formParam.Description" type="textarea" :autosize="{ minRows: 2, maxRows: 4}"
                 placeholder="请输入参数描述" />
@@ -64,8 +70,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { treeDataTranslate } from "../../../utils/typeTree"
-import { updateParamInfo } from "../../../api/param/paramInfo"
-import { getTypeTree } from "../../../api/rule/ruleMaintenance"
+import { updateParamInfo, getTypeTree } from "../../../api/param/paramInfo"
 
 
 const emit = defineEmits(['closeEditParamForm', 'success'])
@@ -80,6 +85,7 @@ const ruleFormRef = ref<FormInstance>()
 const formParam = reactive({
   paramId: '',// 参数ID
   Variable_Name:'',// 参数名称
+  Default_Value:'',// 参数值
   Description: '',// 参数描述
   type1: '',// 一级分类
   type2: '',// 二级分类
@@ -92,6 +98,9 @@ for (const key in formParam) {
 }
 // 定义表单约束规则对象
 const rules = reactive<FormRules>({
+  Default_Value: [
+    { required: true, message: '请输入参数值', trigger: 'blur' },
+  ],
   type1: [
     { required: true, message: '请选择一级分类', trigger: 'blur' },
   ],
