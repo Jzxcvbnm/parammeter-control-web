@@ -4,14 +4,9 @@
         <template #header>
             <div class="card-header">
                 <div class="card-search">
-                    <el-row :gutter="10" style="margin-top: 10px;">
+                    <el-row :gutter="10">
                         <el-col span="6">
-                            <el-form :inline="true" :model="dataForm">
-                                <el-form-item>
-                                    <el-button type="primary" @click="addHandle()"
-                                        color="#00B890">新增</el-button>
-                                </el-form-item>
-                            </el-form>
+                            <el-button type="primary" @click="addHandle()" color="#00B890">新增</el-button>
                         </el-col>
                     </el-row>
                 </div>
@@ -36,11 +31,41 @@
                     </template>
                 </el-table-column>
             </el-table>
-            <!-- 弹窗, 新增 / 修改 -->
-            
         </div>
         <!--表格区域 end-->
     </el-card>
+
+    <!-- 修改参数弹出框 start-->
+    <el-dialog align-center v-model="editTypeDialogFormVisible" width="42%" destroy-on-close>
+        <template #header="{ close, titleId, titleClass }">
+            <div class="my-header">
+                <el-icon size="26px">
+                    <EditPen />
+                </el-icon>
+                <h1 id="titleId">{{ editTitle }}</h1>
+            </div>
+        </template>
+        <!--修改参数组件 start-->
+        <ParamModify :typeInfo="typeInfo" @closeEditTypeForm="closeEditTypeForm" @success="success" />
+        <!--修改参数组件 end-->
+    </el-dialog>
+    <!--修改参数弹出框 end -->
+
+    <!-- 添加参数弹出框 start-->
+    <el-dialog align-center v-model="addTypeDialogFormVisible" width="42%" destroy-on-close>
+        <template #header="{ close, titleId, titleClass }">
+            <div class="my-header">
+                <el-icon size="26px">
+                    <EditPen />
+                </el-icon>
+                <h1 id="titleId">{{ addTitle }}</h1>
+            </div>
+        </template>
+        <!--添加参数组件 start-->
+        <ParamAdd :typeInfo="typeInfo" @closeAddTypeForm="closeAddTypeForm" @success="success" />
+        <!--添加参数组件 end-->
+    </el-dialog>
+    <!-- 添加参数弹出框 end -->
 </template>
 
 <script setup lang="ts">
@@ -53,16 +78,23 @@ import { treeDataTranslate } from "../../utils/typeTree"
 import { getTypeTree, deleteType } from '../../api/rule/ruleMaintenance';
 
 // 修改类型弹窗状态
-const editParamDialogFormVisible = ref(false)
+const editTypeDialogFormVisible = ref(false)
 const editTitle = ref('修改类型信息')
 
 // 新增类型弹窗状态
-const addParamDialogFormVisible = ref(false)
+const addTypeDialogFormVisible = ref(false)
 const addTitle = ref('新增类型信息')
 
 // 分类树获取
 const dataList = ref<any[]>([])
 const dataListLoading = ref(false)
+
+// 提交表单回调函数
+const success = () => {
+    getDataList()
+    editTypeDialogFormVisible.value = false
+    addTypeDialogFormVisible.value = false
+}
 
 // 获取数据列表
 const getDataList = async () => {
@@ -83,13 +115,55 @@ const getDataList = async () => {
 
 }
 
-// 新增
+// 添加类型信息
+const addHandle = () => {
+    addTypeDialogFormVisible.value = true;
+}
+
+// 类型信息
+const typeInfo = ref({
+    id: '',// 分类ID
+    parentId: '',// 上级分类ID
+    categoryName: '',// 分类名称
+    prefix: ''// 分类前缀
+})
 
 
-// 修改
+// 修改类型信息
+const UpdateHandle = async (row) => {
+    editTypeDialogFormVisible.value = true;
 
+    typeInfo.value.id = row.id;
+    typeInfo.value.parentId = row.parentId;
+    typeInfo.value.categoryName = row.categoryName;
+    typeInfo.value.prefix = row.prefix;
+}
 
-// 删除
+// 关闭修改类型弹出框
+const closeEditTypeForm = () => {
+    editTypeDialogFormVisible.value = false
+    // 重置表单数据
+    typeInfo.value = {
+        id: '',// 分类ID
+        parentId: '',// 上级分类ID
+        categoryName: '',// 分类名称
+        prefix: ''// 分类前缀
+    }
+}
+
+// 关闭添加类型弹出框
+const closeAddTypeForm = () => {
+    addTypeDialogFormVisible.value = false
+    // 重置表单数据
+    typeInfo.value = {
+        id: '',// 分类ID
+        parentId: '',// 上级分类ID
+        categoryName: '',// 分类名称
+        prefix: ''// 分类前缀
+    }
+}
+
+// 删除类型信息
 const deleteHandle = (id: number) => {
     ElMessageBox.confirm(`确定对[id=${id}]进行[删除]操作?`, '提示', {
         confirmButtonText: '确定',

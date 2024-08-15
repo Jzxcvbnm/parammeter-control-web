@@ -337,6 +337,7 @@ const resetSearch = () => {
 const success = () => {
   loadData(state);
   editParamDialogFormVisible.value = false
+  addParamDialogFormVisible.value = false
 }
 
 // 上传配置文件
@@ -458,11 +459,6 @@ const paramModify = async (row) => {
   paramInfo.value.verify = row.verify;
 }
 
-// 添加参数信息
-const paramAdd = () => {
-  addParamDialogFormVisible.value = true;
-}
-
 // 关闭修改参数弹出框
 const closeEditParamForm = () => {
   editParamDialogFormVisible.value = false
@@ -476,6 +472,11 @@ const closeEditParamForm = () => {
     status: '',// 参数状态
     verify: '',// 确认标志
   }
+}
+
+// 添加参数信息
+const paramAdd = () => {
+  addParamDialogFormVisible.value = true;
 }
 
 // 关闭添加参数弹出框

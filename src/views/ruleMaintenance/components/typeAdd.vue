@@ -1,10 +1,9 @@
 <template>
-
     <el-form ref="ruleFormRef" :rules="rules" :model="formParam" label-width="80px">
         <el-row>
             <el-col :span="12">
                 <el-form-item label="参数名称" prop="Variable_Name">
-                    <el-input value="{{formParam.Variable_Name}}" placeholder="" readonly />
+                    <el-input v-model="formParam.Variable_Name" placeholder="请输入参数名" />
                 </el-form-item>
             </el-col>
 
@@ -14,26 +13,28 @@
                 </el-form-item>
             </el-col>
 
-            <el-col :span="12">
+            <el-col :span="24">
                 <el-form-item label="参数描述" prop="Description">
                     <el-input v-model="formParam.Description" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }"
-                        placeholder="请输入参数描述" />
+                        placeholder="" />
                 </el-form-item>
             </el-col>
 
-            <el-col :span="8">
-                <el-cascader :options="TypeOptions" @change="typeChange"></el-cascader>
+            <el-col :span="24">
+                <el-form-item label="参数分类" prop="type">
+                    <el-cascader :options="TypeOptions" @change="typeChange" placeholder="请选择参数分类"></el-cascader>
+                </el-form-item>
             </el-col>
 
-            <el-col :span="8">
+            <el-col :span="12">
                 <el-form-item label="一级分类" prop="type1">
-                    <el-input v-model="formParam.type1" placeholder="请选择一级分类" readonly />
+                    <el-input v-model="formParam.type1" placeholder="" readonly />
                 </el-form-item>
             </el-col>
 
-            <el-col :span="8">
+            <el-col :span="12">
                 <el-form-item label="二级分类" prop="type2">
-                    <el-input v-model="formParam.type2" placeholder="请选择二级分类" readonly />
+                    <el-input v-model="formParam.type2" placeholder="" readonly />
                 </el-form-item>
             </el-col>
 
@@ -61,7 +62,7 @@
 
     <div class="dialong__button--wrap">
         <el-button @click="close">取消</el-button>
-        <el-button color="#00B890" :loading="subLoading" type="success" @click="modifyParam(ruleFormRef)">确认</el-button>
+        <el-button color="#00B890" :loading="subLoading" type="success" @click="addParam(ruleFormRef)">确认</el-button>
     </div>
 </template>
 
@@ -70,34 +71,29 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { treeDataTranslate } from "../../../utils/typeTree"
-import { updateParamInfo, getTypeTree } from "../../../api/param/paramInfo"
+import { addParamInfo } from "../../../api/param/paramInfo"
+import { getTypeTree } from "../../../api/rule/ruleMaintenance"
 
-
-const emit = defineEmits(['closeEditParamForm', 'success'])
-
-const props = defineProps(['paramInfo'])
-const paramInfo = ref(props.paramInfo)
+const emit = defineEmits(['closeAddParamForm', 'success'])
 
 const TypeOptions = ref([])
-
 const subLoading = ref(false)
 const ruleFormRef = ref<FormInstance>()
 const formParam = reactive({
-    paramId: '',// 参数ID
-    Variable_Name: '',// 参数名称
-    Default_Value: '',// 参数值
-    Description: '',// 参数描述
-    type1: '',// 一级分类
-    type2: '',// 二级分类
-    status: '',// 参数状态
-    verify: '',// 确认标志
+    Variable_Name: '', // 参数名称
+    Default_Value: '', // 参数值
+    Description: '', // 参数描述
+    type1: '', // 一级分类
+    type2: '', // 二级分类
+    status: '', // 参数状态
+    verify: '', // 确认标志
 })
-// 给表单填充数据
-for (const key in formParam) {
-    formParam[key] = paramInfo.value[key]
-}
+
 // 定义表单约束规则对象
 const rules = reactive<FormRules>({
+    Variable_Name: [
+        { required: true, message: '请输入参数名称', trigger: 'blur' },
+    ],
     Default_Value: [
         { required: true, message: '请输入参数值', trigger: 'blur' },
     ],
@@ -115,13 +111,13 @@ const rules = reactive<FormRules>({
     ]
 })
 
-// 修改参数信息
-const modifyParam = async (formEl: FormInstance | undefined) => {
+// 添加参数信息
+const addParam = async (formEl: FormInstance | undefined) => {
     if (!formEl) return
     await formEl.validate(async (valid, fields) => {
         subLoading.value = true
         if (valid) {  // 表单验证通过
-            const { data } = await updateParamInfo(formParam)
+            const { data } = await addParamInfo(formParam)
             if (data.code === 200) {
                 ElMessage.success(data.msg)
                 emit('success')
@@ -138,7 +134,7 @@ const modifyParam = async (formEl: FormInstance | undefined) => {
 
 // 取消表单
 const close = () => {
-    emit('closeEditParamForm')
+    emit('closeAddParamForm')
 }
 
 // 获取分类树
@@ -146,8 +142,7 @@ const getTree = async () => {
     const { data } = await getTypeTree()
     if (data.code === 200) {
         TypeOptions.value = treeDataTranslate(data.data)
-    }
-    else {
+    } else {
         ElMessage.error(data.msg)
         console.log('获取分类树失败')
     }
