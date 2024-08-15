@@ -12,10 +12,6 @@ import SvgIcon from './components/SvgIcon/index.vue'
 // 导入所有ElementPlus图标
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
-// 导入Apollo配置
-// import { ApolloProvider } from 'vue-apollo'
-// import { client } from './apollo'
-
 const app = createApp(App)
 app.use(router)
 app.use(pinia)

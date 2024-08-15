@@ -46,7 +46,7 @@
             </div>
         </template>
         <!--修改参数组件 start-->
-        <ParamModify :typeInfo="typeInfo" @closeEditTypeForm="closeEditTypeForm" @success="success" />
+        <TypeModify :typeInfo="typeInfo" @closeEditTypeForm="closeEditTypeForm" @success="success" />
         <!--修改参数组件 end-->
     </el-dialog>
     <!--修改参数弹出框 end -->
@@ -62,7 +62,7 @@
             </div>
         </template>
         <!--添加参数组件 start-->
-        <ParamAdd :typeInfo="typeInfo" @closeAddTypeForm="closeAddTypeForm" @success="success" />
+        <TypeAdd :typeInfo="typeInfo" @closeAddTypeForm="closeAddTypeForm" @success="success" />
         <!--添加参数组件 end-->
     </el-dialog>
     <!-- 添加参数弹出框 end -->
@@ -72,10 +72,11 @@
 import { onMounted, reactive, toRefs, ref } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElNotification, ElMessageBox } from 'element-plus'
-import AddOrUpdate from './components/typeModify.vue'
 import { exportExcel } from "../../utils/exprotExcel"
 import { treeDataTranslate } from "../../utils/typeTree"
 import { getTypeTree, deleteType } from '../../api/rule/ruleMaintenance';
+import TypeModify from './components/TypeModify.vue'
+import TypeAdd from './components/TypeAdd.vue'
 
 // 修改类型弹窗状态
 const editTypeDialogFormVisible = ref(false)

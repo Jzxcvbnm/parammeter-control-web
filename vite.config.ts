@@ -26,7 +26,7 @@ export default defineConfig({
         changeOrigin: true,               // 允许跨域
         rewrite: (path) => path.replace(/^\/ghrk/, ''),
       },
-      '/configs': {
+      '/param': {
         target: envConfig.VITE_APP_APOLLO_API, // 目标(server path)
         changeOrigin: true,               // 允许跨域
         rewrite: (path) => path.replace(/^\/configs/, ''),
