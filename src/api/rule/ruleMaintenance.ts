@@ -29,7 +29,7 @@ export function updateType(data) {
 // 删除分类
 export function deleteType(id) {
     return request({
-        url: '/type/delete/{id}',
+        url: `/type/delete/${id}`,
         method: 'delete',
     })
 }

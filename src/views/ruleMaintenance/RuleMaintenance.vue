@@ -14,24 +14,36 @@
         </template>
         <!--头部 end-->
         <!--表格区域 start-->
-        <!-- <div class="table-box" v-if="showTable"> -->
-        <div class="table-box">
-            <el-table :data="dataList" row-key="menuId" border style="width: 100%; ">
+        <div class="table-box" v-if="showTable">
+            <!-- <div class="table-box"> -->
+            <el-table :data="dataList" v-loading="dataListLoading" row-key="id" border style="width: 100%;"
+                :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
                 <el-table-column type="index" width="60" align="center" label="序号"></el-table-column>
+
                 <el-table-column prop="categoryName" header-align="center" min-width="50" label="类型">
                 </el-table-column>
-                <el-table-column prop="parentName" header-align="center" align="center" label="上级类型">
+
+                <el-table-column prop="parentId" header-align="center" align="center" label="上级类型">
+                    <template #default="scope">
+                        <span v-for="item in dataList" :key="item.id">
+                            <span v-if="scope.row.parentId === item.id">{{ item.categoryName }}</span>
+                        </span>
+                    </template>
                 </el-table-column>
+
                 <el-table-column prop="prefix" header-align="center" align="center" label="分类前缀">
                 </el-table-column>
+
                 <el-table-column fixed="right" header-align="center" align="center" width="150" label="操作">
                     <template #default="scope">
                         <el-button type="text" size="small" @click="UpdateHandle(scope.row.id)">修改</el-button>
-                        <el-button type="text" size="small" @click="deleteHandle(scope.row.id)">删除</el-button>
+                        <el-button type="text" size="small" @click="deleteHandle(scope.row)"
+                            :disabled="scope.row.children && scope.row.children.length > 0">删除</el-button>
                     </template>
                 </el-table-column>
             </el-table>
         </div>
+
         <!--表格区域 end-->
     </el-card>
 
@@ -89,6 +101,7 @@ const addTitle = ref('新增类型信息')
 // 分类树获取
 const dataList = ref<any[]>([])
 const dataListLoading = ref(false)
+const showTable = ref(false)
 
 // 提交表单回调函数
 const success = () => {
@@ -99,6 +112,7 @@ const success = () => {
 
 // 获取数据列表
 const getDataList = async () => {
+    showTable.value = true
     dataListLoading.value = true
     const { data } = await getTypeTree()
 
@@ -110,7 +124,7 @@ const getDataList = async () => {
         })
     }
     else {
-        dataList.value = treeDataTranslate(data)
+        dataList.value = data.data
         dataListLoading.value = false
     }
 
@@ -165,14 +179,14 @@ const closeAddTypeForm = () => {
 }
 
 // 删除类型信息
-const deleteHandle = (id: number) => {
-    ElMessageBox.confirm(`确定对[id=${id}]进行[删除]操作?`, '提示', {
+const deleteHandle = (row) => {
+    ElMessageBox.confirm(`确定对类型：[${row.categoryName}]进行[删除]操作?`, '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
     }).then(async () => {
         try {
-            const { data } = await deleteType(id)
+            const { data } = await deleteType(row.id)
 
             if (data.code === 200) {
                 ElMessage({
@@ -272,6 +286,10 @@ onMounted(() => {
 .my-button {
     display: flex;
     justify-content: center;
+}
+
+.no-cursor {
+    cursor: default !important;
 }
 
 /*修改v-loading样式*/
