@@ -22,9 +22,9 @@ export default defineConfig({
     // api 请求代理
     proxy: {
       '/param': {
-        target: envConfig.VITE_APP_APOLLO_API, // 目标(server path)
+        target: envConfig.VITE_APP_BASE_API, // 目标(server path)
         changeOrigin: true,               // 允许跨域
-        rewrite: (path) => path.replace(/^\/configs/, ''),
+        rewrite: (path) => path.replace(/^\/param/, ''),
       }
     }
   }

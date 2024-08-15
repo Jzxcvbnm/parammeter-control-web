@@ -16,7 +16,7 @@
           </el-col>
 
           <el-col :span="24">
-              <el-form-item label="匹配前缀" prop="prefix">
+              <el-form-item label="匹配前缀" prop="prefix" v-if="formType.parentId === '2'">
                   <el-input v-model="formType.prefix" placeholder="（格式类似于：spring.cloud.netflix.eureka）" />
               </el-form-item>
           </el-col>
@@ -53,7 +53,7 @@ const formType = reactive({
 // 给表单填充数据
 console.log("typeInfo:",typeInfo.value)
 for (const key in formType) {
-  formType[key] = typeInfo.value[key]
+  formType.value[key] = typeInfo.value[key]
 }
 // 定义表单约束规则对象
 const rules = reactive<FormRules>({
@@ -98,7 +98,15 @@ const close = () => {
 const getTree = async () => {
   const { data } = await getTypeTree()
   if (data.code === 200) {
-    TypeOptions.value = data.data
+        TypeOptions.value = data.data
+        // 添加无上级分类时的选项
+        TypeOptions.value.unshift({
+        id: '0',
+        parentId: '0',
+        categoryName: '无',
+        prefix: '' ,
+        children: [],
+    })
   }
   else{
     ElMessage.error(data.msg)

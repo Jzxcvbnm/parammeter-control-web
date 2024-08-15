@@ -92,10 +92,11 @@ const getTree = async () => {
         TypeOptions.value = data.data
         // 添加无上级分类时的选项
         TypeOptions.value.unshift({
-            id: '',
-            parentId: '',
-            categoryName: '',
-            prefix: '' 
+            id: '0',
+            parentId: '0',
+            categoryName: '无',
+            prefix: '' ,
+            children: [],
         })
 
     } else {
