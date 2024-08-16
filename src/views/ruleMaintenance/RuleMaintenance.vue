@@ -138,11 +138,11 @@ const addHandle = () => {
 // 类型信息
 const typeInfo = ref({
     id: '',// 分类ID
-    parentId: '',// 上级分类ID
+    parentId: null,// 上级分类ID
     categoryName: '',// 分类名称
-    prefix: ''// 分类前缀
+    prefix: '',// 分类前缀
+    matchType: null// 匹配类型
 })
-
 
 // 修改类型信息
 const UpdateHandle = async (row) => {
@@ -152,6 +152,8 @@ const UpdateHandle = async (row) => {
     typeInfo.value.parentId = row.parentId;
     typeInfo.value.categoryName = row.categoryName;
     typeInfo.value.prefix = row.prefix;
+    typeInfo.value.matchType = row.matchType;
+    console.log(111111111111,typeInfo)
 }
 
 // 关闭修改类型弹出框
@@ -160,9 +162,10 @@ const closeEditTypeForm = () => {
     // 重置表单数据
     typeInfo.value = {
         id: '',// 分类ID
-        parentId: '',// 上级分类ID
+        parentId: null,// 上级分类ID
         categoryName: '',// 分类名称
-        prefix: ''// 分类前缀
+        prefix: '',// 分类前缀
+        matchType: null// 匹配类型
     }
 }
 
@@ -172,15 +175,16 @@ const closeAddTypeForm = () => {
     // 重置表单数据
     typeInfo.value = {
         id: '',// 分类ID
-        parentId: '',// 上级分类ID
+        parentId: null,// 上级分类ID
         categoryName: '',// 分类名称
-        prefix: ''// 分类前缀
+        prefix: '',// 分类前缀
+        matchType: null// 匹配类型
     }
 }
 
 // 删除类型信息
 const deleteHandle = (row) => {
-    ElMessageBox.confirm(`确定对类型：[${row.categoryName}]进行[删除]操作?`, '提示', {
+    ElMessageBox.confirm(`确定对类型：[${row.categoryName}] 进行 [删除] 操作?`, '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -190,7 +194,7 @@ const deleteHandle = (row) => {
 
             if (data.code === 200) {
                 ElMessage({
-                    message: '操作成功',
+                    message: '删除成功',
                     type: 'success',
                 });
 
@@ -199,7 +203,7 @@ const deleteHandle = (row) => {
                 ElMessage.error(data.msg);
             }
         } catch (error) {
-            ElMessage.error('删除操作失败');
+            ElMessage.error('删除失败');
         }
     }).catch(() => { });
 };

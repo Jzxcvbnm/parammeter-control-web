@@ -88,7 +88,7 @@ const formParam = reactive({
 })
 // 给表单填充数据
 for (const key in formParam) {
-  formParam.value[key] = paramInfo.value[key]
+  formParam[key] = paramInfo.value[key]
 }
 // 定义表单约束规则对象
 const rules = reactive<FormRules>({

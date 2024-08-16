@@ -2,9 +2,28 @@
     <el-form ref="ruleFormRef" :rules="rules" :model="formType" label-width="80px">
         <el-row>
             <el-col :span="24">
+                <el-form-item label="新增分类" prop="level">
+                    <el-select v-model="level" placeholder="请选择分类层级" @change="handleLevelChange">
+                        <el-option label="一级分类" value="1"></el-option>
+                        <el-option label="二级分类" value="2"></el-option>
+                    </el-select>
+                </el-form-item>
+            </el-col>
+
+            <el-col :span="24" v-if="level == 1">
+                <el-form-item label="匹配类型" prop="matchType">
+                    <el-select v-model="formType.matchType" placeholder="请选择匹配类型">
+                        <el-option label="前缀匹配" value="0"></el-option>
+                        <el-option label="代码扫描" value="1"></el-option>
+                    </el-select>
+                </el-form-item>
+            </el-col>
+
+            <el-col :span="24" v-if="level == 2">
                 <el-form-item label="上级分类" prop="parentId">
-                    <el-select v-model="formType.parentId" placeholder="请选择上级分类">
-                        <el-option v-for="item in TypeOptions" :key="item.id" :label="item.categoryName" :value="item.id"></el-option>
+                    <el-select v-model="formType.parentId" placeholder="请选择上级分类" @change="handleParentChange">
+                        <el-option v-for="item in TypeOptions" :key="item.id" :label="item.categoryName"
+                            :value="item.id"></el-option>
                     </el-select>
                 </el-form-item>
             </el-col>
@@ -15,8 +34,8 @@
                 </el-form-item>
             </el-col>
 
-            <el-col :span="24">
-                <el-form-item label="匹配前缀" prop="prefix" v-if="formType.parentId === '2'">
+            <el-col :span="24" v-if="formType.matchType == 0 && level != 1">
+                <el-form-item label="匹配前缀" prop="prefix">
                     <el-input v-model="formType.prefix" placeholder="（格式类似于：spring.cloud.netflix.eureka）" />
                 </el-form-item>
             </el-col>
@@ -40,14 +59,23 @@ const emit = defineEmits(['closeAddTypeForm', 'success'])
 const TypeOptions = ref([])
 const subLoading = ref(false)
 const ruleFormRef = ref<FormInstance>()
+
+// 分类层级
+const level = ref(null)
+
+// 表单数据
 const formType = reactive({
-    parentId: '',
-    categoryName: '',
-    prefix: '',
+    parentId: null,// 上级分类
+    categoryName: '',// 类型名称
+    prefix: '',// 匹配前缀
+    matchType: null,// 匹配类型 0-前缀匹配 1-代码扫描
 })
 
 // 定义表单约束规则对象
 const rules = reactive<FormRules>({
+    level: [
+        { required: true, message: '请选择分类层级', trigger: 'blur' },
+    ],
     parentId: [
         { required: true, message: '请选择上级分类', trigger: 'blur' },
     ],
@@ -59,6 +87,21 @@ const rules = reactive<FormRules>({
     ],
 })
 
+// 选择上级分类时，获取匹配类型
+const handleParentChange = (selectedId) => {
+    const selectedType = TypeOptions.find(item => item.id === selectedId);
+    if (selectedType) {
+        formType.matchType = selectedType.matchType;
+    }
+}
+
+// 选择分类层级时，清空上级分类和匹配类型
+const handleLevelChange = (value) => {
+    level.value = value
+    formType.parentId = null
+    formType.matchType = null
+}
+
 // 添加参数信息
 const confirmAdd = async (formEl: FormInstance | undefined) => {
     if (!formEl) return
@@ -67,7 +110,7 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
         if (valid) {  // 表单验证通过
             const { data } = await addType(formType)
             if (data.code === 200) {
-                ElMessage.success(data.msg)
+                ElMessage.success('添加成功')
                 emit('success')
             } else {
                 ElMessage.error(data.msg)
@@ -90,15 +133,6 @@ const getTree = async () => {
     const { data } = await getTypeTree()
     if (data.code === 200) {
         TypeOptions.value = data.data
-        // 添加无上级分类时的选项
-        TypeOptions.value.unshift({
-            id: '0',
-            parentId: '0',
-            categoryName: '无',
-            prefix: '' ,
-            children: [],
-        })
-
     } else {
         ElMessage.error(data.msg)
         console.log('获取分类树失败')

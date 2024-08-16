@@ -3,7 +3,7 @@ import { useUserStore } from '../store/modules/user'
 
 const service  = axios.create({
     // baseURL: import.meta.env.VITE_APP_BASE_API,
-    baseURL: '/ghrk',
+    baseURL: '/param',
     timeout: 300000,
     withCredentials: true,
     headers: {
