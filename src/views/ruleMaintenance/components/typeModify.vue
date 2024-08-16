@@ -61,6 +61,7 @@ const level = ref<number | null>(null);
 
 // 表单数据
 const formType = reactive({
+  id:'',// 类型id
   parentId: null,// 上级分类
   categoryName: '',// 类型名称
   prefix: '',// 匹配前缀
