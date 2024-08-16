@@ -100,13 +100,6 @@ const handleParentChange = (selectedId) => {
   }
 }
 
-// 选择分类层级时，清空上级分类和匹配类型
-const handleLevelChange = (value) => {
-  level.value = value
-  formType.parentId = null
-  formType.matchType = null
-}
-
 // 修改参数信息
 const confirmModify = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
