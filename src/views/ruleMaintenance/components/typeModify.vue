@@ -4,9 +4,21 @@
 
       <el-col :span="24" v-if="level == 1">
         <el-form-item label="匹配类型" prop="matchType">
-          <el-select v-model="formType.matchType" @change="handleMatchTypeChange">
+          <el-select v-model="formType.matchType" @change="handleMatchTypeChange" :disabled="true">
             <el-option v-for="item in matchTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
+        </el-form-item>
+      </el-col>
+
+      <el-col :span="24" v-if="level == 1">
+        <el-form-item label="命名空间" prop="namespace">
+          <el-input v-model="formType.namespace" placeholder="请输入命名空间" />
+        </el-form-item>
+      </el-col>
+
+      <el-col :span="24" v-if="level == 1">
+        <el-form-item label="代码地址" prop="codeUrl">
+          <el-input v-model="formType.codeUrl" placeholder="请输入代码地址（如：https://gitee.com/xxx/xxx.git）" />
         </el-form-item>
       </el-col>
 
@@ -66,13 +78,13 @@ const level = ref<number | null>(null);
 
 // 表单数据
 const formType = reactive({
-  id: '',// 分类ID
+  id: null,// 分类ID
   parentId: null,// 上级分类ID
-  categoryName: '',// 分类名称
-  prefix: '',// 分类前缀
+  categoryName: null,// 分类名称
+  prefix: null,// 分类前缀
   matchType: null,// 匹配类型
-  namespace: '',// 命名空间
-  codeUrl: '',// 代码地址
+  namespace: null,// 命名空间
+  codeUrl: null,// 代码地址
 })
 
 // 给表单填充数据

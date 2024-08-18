@@ -83,10 +83,10 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="提示">
+        <el-table-column label="确认状态">
           <template #default="scope">
-            <el-tooltip :content="verifyMap[scope.row.verify]" placement="top" effect="light">
-              <span class="highlight">{{ verifyMap[scope.row.verify] }}</span>
+            <el-tooltip :content="checkStatusMap[scope.row.checkStatus]" placement="top" effect="light">
+              <span class="highlight">{{ checkStatusMap[scope.row.checkStatus] }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -104,7 +104,7 @@
   </el-card>
 
   <!-- 上传配置弹出框 start-->
-  <el-dialog title="上传配置文件" v-model="uploadDialogVisible" width="50%">
+  <el-dialog title="上传配置文件" v-model="uploadDialogVisible" width="25%" destroy-on-close :before-close="cancelUploadConfig">
     <el-form>
       <el-form-item label="文件路径">
 
@@ -121,14 +121,6 @@
             </el-button>
             <input type="file" ref="fileInput" style="display: none;" @change="handleFileChange" />
           </el-col>
-          <el-col :span="24"></el-col>
-          <el-col :span="24">
-            <el-form>
-              <el-form-item label="代码地址">
-                <el-input v-model="codeUrl" placeholder="请输入代码仓库地址（如：https://gitee.com/xxx/xxx.git）"></el-input>
-              </el-form-item>
-            </el-form>
-          </el-col>
         </el-row>
 
       </el-form-item>
@@ -143,7 +135,7 @@
   <!-- 上传配置弹出框 end -->
 
   <!-- 修改参数弹出框 start-->
-  <el-dialog align-center v-model="editParamDialogFormVisible" width="42%" destroy-on-close>
+  <el-dialog align-center v-model="editParamDialogFormVisible" width="42%" destroy-on-close :before-close="closeEditParamForm">
     <template #header="{ close, titleId, titleClass }">
       <div class="my-header">
         <el-icon size="26px">
@@ -159,7 +151,7 @@
   <!--修改参数弹出框 end -->
 
   <!-- 添加参数弹出框 start-->
-  <el-dialog align-center v-model="addParamDialogFormVisible" width="42%" destroy-on-close>
+  <el-dialog align-center v-model="addParamDialogFormVisible" width="42%" destroy-on-close :before-close="closeAddParamForm">
     <template #header="{ close, titleId, titleClass }">
       <div class="my-header">
         <el-icon size="26px">
@@ -180,13 +172,11 @@ import { onMounted, reactive, toRefs, ref } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElNotification, ElMessageBox } from 'element-plus'
 import { exportExcel } from "../../utils/exprotExcel"
-import { uploadConfig, uploadCodeUrl, getParamInfoAll, getParamInfo, deleteParamInfo } from '../../api/param/paramInfo';
+import { uploadConfig, getParamInfoAll, getParamInfo, deleteParamInfo } from '../../api/param/paramInfo';
 import { getTypeTree } from '../../api/rule/ruleMaintenance';
 import ParamModify from './components/ParamModify.vue'
 import ParamAdd from './components/ParamAdd.vue'
 
-// 分类树
-const typeTree = ref([])
 
 // 状态映射
 const statusMap = {
@@ -195,11 +185,12 @@ const statusMap = {
   '2': '作废'
 }
 
-// 标志映射
-const verifyMap = {
-  '0': '正常',
-  '1': '增量',
-  '2': '未扫描到参数信息，建议修改或作废'
+// 确认状态映射
+const checkStatusMap = {
+  1: '推荐分类',
+  2: '已确认',
+  3: '未找到使用',
+  4: '未找到分类',
 }
 
 // 修改参数弹窗状态
@@ -215,7 +206,6 @@ const uploadDialogVisible = ref(false)
 const filePath = ref('')
 const fileInput = ref(null)
 const selectedFile = ref(null)
-const codeUrl = ref('')
 
 
 const state = reactive({
@@ -269,7 +259,7 @@ const tableRowStatus = ({ row, rowIndex }) => {
   if (row.type1 === '其他' || row.type2 === '其他') {
     return 'danger-row';
   }
-  if (row.status !== 1) {
+  if (row.checkStatus !== 1) {
     return 'warning-row';
   }
 
@@ -331,6 +321,7 @@ const uploadFile = () => {
   uploadDialogVisible.value = true
 }
 
+// 选择文件
 const selectFile = () => {
   fileInput.value.click()
 }
@@ -353,14 +344,6 @@ const confirmUpload = async () => {
 
   const formData = new FormData()
   formData.append('file', selectedFile.value)
-
-  if (!codeUrl.value) {
-    alert('请输入代码地址')
-    return
-  }
-  const params = {
-    'url': codeUrl.value,
-  }
 
   try {
     const response = await uploadConfig(formData)
@@ -395,58 +378,24 @@ const confirmUpload = async () => {
     })
   }
 
-  try {
-    const response = await uploadCodeUrl(params)
-    if (response.data.code !== 200) {
-      codeUrl.value = ''
-
-      loadData(state) // 上传成功后重新查询
-      ElMessage({
-        type: 'success',
-        message: '代码地址上传成功',
-      })
-    }
-    else {
-      console.log('代码地址上传失败', response)
-      codeUrl.value = ''
-
-
-      ElMessage({
-        type: 'error',
-        message: response.data.msg,
-      })
-    }
-
-  } catch (error) {
-    console.error('代码地址上传失败', error)
-    codeUrl.value = ''
-
-    ElMessage({
-      type: 'error',
-      message: '代码地址上传失败',
-    })
-
-  }
-
 }
 
 // 取消上传配置文件
 const cancelUploadConfig = () => {
   uploadDialogVisible.value = false
-  // selectedFile.value = null
+  selectedFile.value = null
   filePath.value = ''
-  codeUrl.value = ''
 }
 
 // 参数信息
 const paramInfo = ref({
-  paramId: '',// 参数ID
-  parameterKey: '',// 参数名称
-  comment: '',// 参数描述
-  type1: '',// 一级分类
-  type2: '',// 二级分类
-  status: '',// 参数状态
-  verify: '',// 确认标志
+  paramId: null,// 参数ID
+  parameterKey: null,// 参数名称
+  comment: null,// 参数描述
+  type1: null,// 一级分类
+  type2: null,// 二级分类
+  status: null,// 参数状态
+  checkStatus: null,// 确认状态
 })
 
 // 修改参数信息
@@ -459,7 +408,7 @@ const paramModify = async (row) => {
   paramInfo.value.type1 = row.type1;
   paramInfo.value.type2 = row.type2;
   paramInfo.value.status = row.status;
-  paramInfo.value.verify = row.verify;
+  paramInfo.value.checkStatus = row.checkStatus;
 }
 
 // 关闭修改参数弹出框
@@ -467,13 +416,13 @@ const closeEditParamForm = () => {
   editParamDialogFormVisible.value = false
   // 重置表单数据
   paramInfo.value = {
-    paramId: '',// 参数ID
-    parameterKey: '',// 参数名称
-    comment: '',// 参数描述
-    type1: '',// 一级分类 
-    type2: '',// 二级分类
-    status: '',// 参数状态
-    verify: '',// 确认标志
+    paramId: null,// 参数ID
+    parameterKey: null,// 参数名称
+    comment: null,// 参数描述
+    type1: null,// 一级分类
+    type2: null,// 二级分类
+    status: null,// 参数状态
+    checkStatus: null,// 确认状态
   }
 }
 
@@ -487,13 +436,13 @@ const closeAddParamForm = () => {
   addParamDialogFormVisible.value = false
   // 重置表单数据
   paramInfo.value = {
-    paramId: '',// 参数ID
-    parameterKey: '',// 参数名称
-    comment: '',// 参数描述
-    type1: '',// 一级分类 
-    type2: '',// 二级分类
-    status: '',// 参数状态
-    verify: '',// 确认标志
+    paramId: null,// 参数ID
+    parameterKey: null,// 参数名称
+    comment: null,// 参数描述
+    type1: null,// 一级分类
+    type2: null,// 二级分类
+    status: null,// 参数状态
+    checkStatus: null,// 确认状态
   }
 }
 
@@ -559,8 +508,8 @@ const column = [
     name: 'comment',
   },
   {
-    label: '确认标志',
-    name: 'verify',
+    label: '确认状态',
+    name: 'checkStatus',
   },
 ]
 // 导出excel
@@ -573,25 +522,6 @@ const exportExcelData = () => {
     autoWidth: true,
   })
 }
-
-// // 获取分类树
-// const getType = async () => {
-//   const { data } = await getTypeTree()
-//   if (data.code === 200) {
-//     typeTree = data.data
-//   } else {
-//     ElMessage({
-//       type: 'error',
-//       message: '获取分类树失败',
-//     })
-//   }
-// }
-
-// // 根据分类ID获取分类名称
-// const getTypeName = (typeId) => {
-//   const type = typeTree.value.find((item) => item.id === typeId)
-//   return type ? type.categoryName : ''
-// }
 
 // // 分页序号不乱
 // const Nindex = (index) => {

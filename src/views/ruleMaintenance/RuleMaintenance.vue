@@ -22,8 +22,16 @@
 
                 <el-table-column prop="categoryName" header-align="center" min-width="50" label="类型">
                 </el-table-column>
-                
+
                 <el-table-column prop="namespace" header-align="center" min-width="50" label="命名空间">
+                </el-table-column>
+
+                // 匹配类型
+                <el-table-column prop="matchType" header-align="center" align="center" min-width="50" label="匹配类型">
+                    <template #default="scope">
+                        <span v-if="scope.row.matchType === 1">前缀匹配</span>
+                        <span v-else-if="scope.row.matchType === 2">代码扫描</span>
+                    </template>
                 </el-table-column>
 
                 <el-table-column prop="codeUrl" header-align="center" min-width="50" label="代码地址">
@@ -42,7 +50,8 @@
 
                 <el-table-column fixed="right" header-align="center" align="center" width="200" label="操作">
                     <template #default="scope">
-                        <el-button v-if="scope.row.parentId == 0" type="text" size="small" @click="addHandle(2, scope.row)">新增</el-button>
+                        <el-button v-if="scope.row.parentId == 0" type="text" size="small"
+                            @click="addHandle(2, scope.row)">新增</el-button>
                         <el-button type="text" size="small" @click="UpdateHandle(scope.row)">修改</el-button>
                         <el-button type="text" size="small" @click="deleteHandle(scope.row)"
                             :disabled="scope.row.children && scope.row.children.length > 0">删除</el-button>
@@ -55,7 +64,8 @@
     </el-card>
 
     <!-- 修改参数弹出框 start-->
-    <el-dialog align-center v-model="editTypeDialogFormVisible" width="42%" destroy-on-close :before-close="closeEditTypeForm">·
+    <el-dialog align-center v-model="editTypeDialogFormVisible" width="42%" destroy-on-close
+        :before-close="closeEditTypeForm">
         <template #header="{ close, titleId, titleClass }">
             <div class="my-header">
                 <el-icon size="26px">
@@ -71,7 +81,8 @@
     <!--修改参数弹出框 end -->
 
     <!-- 添加参数弹出框 start-->
-    <el-dialog align-center v-model="addTypeDialogFormVisible" width="42%" destroy-on-close :before-close="closeAddTypeForm">
+    <el-dialog align-center v-model="addTypeDialogFormVisible" width="42%" destroy-on-close
+        :before-close="closeAddTypeForm">
         <template #header="{ close, titleId, titleClass }">
             <div class="my-header">
                 <el-icon size="26px">
@@ -81,7 +92,8 @@
             </div>
         </template>
         <!--添加参数组件 start-->
-        <TypeAdd :typeInfo="typeInfo" :isAddInFirstLevel="isAddInFirstLevel" @closeAddTypeForm="closeAddTypeForm" @success="success" />
+        <TypeAdd :typeInfo="typeInfo" :isAddInFirstLevel="isAddInFirstLevel" @closeAddTypeForm="closeAddTypeForm"
+            @success="success" />
         <!--添加参数组件 end-->
     </el-dialog>
     <!-- 添加参数弹出框 end -->
@@ -144,10 +156,12 @@ const getDataList = async () => {
 
 // 添加类型信息
 const addHandle = (level = null, row = null) => {
-    if(level&&row){
+    if (level && row) {
         typeInfo.value.level = level;
         typeInfo.value.parentId = row.id;
         typeInfo.value.matchType = row.matchType;
+        typeInfo.value.namespace = row.namespace;
+        typeInfo.value.codeUrl = row.codeUrl;
         isAddInFirstLevel.value = true;
     }
 
@@ -157,13 +171,13 @@ const addHandle = (level = null, row = null) => {
 // 类型信息
 const typeInfo = ref({
     level: null,// 分类级别
-    id: '',// 分类ID
+    id: null,// 分类ID
     parentId: null,// 上级分类ID
-    categoryName: '',// 分类名称
-    prefix: '',// 分类前缀
+    categoryName: null,// 分类名称
+    prefix: null,// 分类前缀
     matchType: null,// 匹配类型
-    namespace: '',// 命名空间
-    codeUrl: '',// 代码地址
+    namespace: null,// 命名空间
+    codeUrl: null,// 代码地址
 })
 
 // 修改类型信息
@@ -185,13 +199,13 @@ const closeEditTypeForm = () => {
     // 重置表单数据
     typeInfo.value = {
         level: null,// 分类级别
-        id: '',// 分类ID
+        id: null,// 分类ID
         parentId: null,// 上级分类ID
-        categoryName: '',// 分类名称
-        prefix: '',// 分类前缀
+        categoryName: null,// 分类名称
+        prefix: null,// 分类前缀
         matchType: null,// 匹配类型
-        namespace: '',// 命名空间
-        codeUrl: '',// 代码地址
+        namespace: null,// 命名空间
+        codeUrl: null,// 代码地址
     }
 }
 
@@ -202,13 +216,13 @@ const closeAddTypeForm = () => {
     // 重置表单数据
     typeInfo.value = {
         level: null,// 分类级别
-        id: '',// 分类ID
+        id: null,// 分类ID
         parentId: null,// 上级分类ID
-        categoryName: '',// 分类名称
-        prefix: '',// 分类前缀
+        categoryName: null,// 分类名称
+        prefix: null,// 分类前缀
         matchType: null,// 匹配类型
-        namespace: '',// 命名空间
-        codeUrl: '',// 代码地址
+        namespace: null,// 命名空间
+        codeUrl: null,// 代码地址
     }
 }
 

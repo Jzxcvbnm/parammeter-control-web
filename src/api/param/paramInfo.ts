@@ -9,15 +9,6 @@ export function uploadConfig(data) {
     })
 }
 
-// 上传代码地址
-export function uploadCodeUrl(data) {
-    return request({
-        url: '/param_info/code_url',
-        method: 'post',
-        data
-    })
-}
-
 // 获取参数信息
 export function getParamInfoAll() {
     return request({

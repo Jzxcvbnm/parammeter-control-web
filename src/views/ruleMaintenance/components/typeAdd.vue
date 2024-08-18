@@ -11,12 +11,30 @@
                 </el-form-item>
             </el-col>
 
+            <el-col :span="24">
+                <el-form-item label="类型名称" prop="categoryName">
+                    <el-input v-model="formType.categoryName" placeholder="请输入类型名称" />
+                </el-form-item>
+            </el-col>
+
             <el-col :span="24" v-if="formType.level == 1">
                 <el-form-item label="匹配类型" prop="matchType">
                     <el-select v-model="formType.matchType" placeholder="请选择匹配类型">
                         <el-option label="前缀匹配" value="1"></el-option>
                         <el-option label="代码扫描" value="2"></el-option>
                     </el-select>
+                </el-form-item>
+            </el-col>
+
+            <el-col :span="24" v-if="formType.level == 1">
+                <el-form-item label="命名空间" prop="namespace">
+                    <el-input v-model="formType.namespace" placeholder="请输入命名空间" />
+                </el-form-item>
+            </el-col>
+
+            <el-col :span="24" v-if="formType.level == 1">
+                <el-form-item label="代码地址" prop="codeUrl">
+                    <el-input v-model="formType.codeUrl" placeholder="请输入代码地址（如：https://gitee.com/xxx/xxx.git）" />
                 </el-form-item>
             </el-col>
 
@@ -27,12 +45,6 @@
                         <el-option v-for="item in TypeOptions" :key="item.id" :label="item.categoryName"
                             :value="item.id"></el-option>
                     </el-select>
-                </el-form-item>
-            </el-col>
-
-            <el-col :span="24">
-                <el-form-item label="类型名称" prop="categoryName">
-                    <el-input v-model="formType.categoryName" placeholder="请输入类型名称" />
                 </el-form-item>
             </el-col>
 
@@ -77,10 +89,10 @@ const formType = reactive({
     level: null,// 分类层级
     matchType: null,// 匹配类型 0-前缀匹配 1-代码扫描
     parentId: null,// 上级分类
-    categoryName: '',// 类型名称
-    prefix: '',// 匹配前缀
-    namespace: '',// 命名空间
-    codeUrl: '',// 代码地址
+    categoryName: null,// 类型名称
+    prefix: null,// 匹配前缀
+    namespace: null,// 命名空间
+    codeUrl: null,// 代码地址
 })
 
 // 给表单填充数据
@@ -95,6 +107,12 @@ const rules = reactive<FormRules>({
     ],
     matchType: [
         { required: (form) => form.level === 1, message: '请选择匹配类型', trigger: 'blur' },
+    ],
+    namespace: [
+        { required: (form) => form.level === 1, message: '请输入命名空间', trigger: 'blur' },
+    ],
+    codeUrl: [
+        { required: (form) => form.level === 1, message: '请输入代码地址', trigger: 'blur' },
     ],
     parentId: [
         { required: (form) => form.level === 2, message: '请选择上级分类', trigger: 'blur' },
