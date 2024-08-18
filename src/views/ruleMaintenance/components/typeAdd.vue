@@ -79,6 +79,8 @@ const formType = reactive({
     parentId: null,// 上级分类
     categoryName: '',// 类型名称
     prefix: '',// 匹配前缀
+    namespace: '',// 命名空间
+    codeUrl: '',// 代码地址
 })
 
 // 给表单填充数据
@@ -137,6 +139,8 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
                 parentId: formType.parentId,
                 categoryName: formType.categoryName,
                 prefix: formType.prefix,
+                namespace: formType.namespace,
+                codeUrl: formType.codeUrl,
             }
             const { data } = await addType(params)
             if (data.code === 200) {
