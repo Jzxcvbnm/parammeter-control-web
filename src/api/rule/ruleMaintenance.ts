@@ -21,7 +21,7 @@ export function addType(data) {
 export function updateType(data) {
     return request({
         url: '/type/update',
-        method: 'post',
+        method: 'put',
         data
     })
 }

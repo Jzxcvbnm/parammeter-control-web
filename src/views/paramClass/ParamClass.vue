@@ -8,17 +8,14 @@
             <el-col span="6">
               <el-button type="primary" @click="uploadFile" color="#00B890">上传配置</el-button>
             </el-col>
-            <el-col span="6">
-              <el-button type="primary" @click="uploadUrl" color="#00B890">上传代码地址</el-button>
-            </el-col>
           </el-row>
         </div>
       </div>
     </template>
     <!--头部 end-->
     <!--表格区域 start-->
-    <!-- <div class="table-box" v-if="showTable"> -->
-    <div class="table-box">
+    <div class="table-box" v-if="showTable">
+      <!-- <div class="table-box"> -->
       <el-row :gutter="10">
         <el-col :span="12" style="margin-bottom: 5px;">
           <el-input :prefix-icon="Search" v-model="paramValue" @keyup.enter="validateAndSearch"
@@ -33,24 +30,23 @@
           <el-button type="primary" @click="exportExcelData" color="#00B890" style="width: 125px;">导出excel文件</el-button>
         </el-col>
       </el-row>
-      <!-- <el-table element-loading-text="数据加载中..." v-loading="loading" :data="tableData" -->
-      <el-table element-loading-text="数据加载中..." v-loading="false" :data="tableData"
+      <el-table element-loading-text="数据加载中..." v-loading="loading" :data="tableData"
         style="width: 100%;text-align: center" :row-class-name="tableRowStatus"
-        :default-sort="{ prop: 'Namespace_Name', order: 'ascending' }" :cell-style="{ textAlign: 'center' }"
+        :default-sort="{ prop: 'type1', order: 'ascending' }" :cell-style="{ textAlign: 'center' }"
         :header-cell-style="{ fontSize: '12px', background: '#484848', color: 'white', textAlign: 'center' }">
 
-        <el-table-column label="一级分类" sortable>
+        <el-table-column label="一级分类" prop="parentName" sortable>
           <template #default="scope">
-            <el-tooltip :content="scope.row.type1" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.type1 }}</span>
+            <el-tooltip :content="scope.row.parentName" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.parentName }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
 
         <el-table-column label="二级分类" sortable>
           <template #default="scope">
-            <el-tooltip :content="scope.row.type2" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.type2 }}</span>
+            <el-tooltip :content="scope.row.categoryName" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.categoryName }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -63,33 +59,33 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="命名空间" prop="Namespace_Name" sortable>
+        <el-table-column label="命名空间" prop="namespace" sortable>
           <template #default="scope">
-            <el-tooltip :content="scope.row.Namespace_Name" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.Namespace_Name }}</span>
+            <el-tooltip :content="scope.row.namespace" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.namespace }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
 
         <el-table-column label="变量名称">
           <template #default="scope">
-            <el-tooltip :content="scope.row.Variable_Name" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.Variable_Name }}</span>
+            <el-tooltip :content="scope.row.parameterKey" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.parameterKey }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
 
         <el-table-column label="变量描述">
           <template #default="scope">
-            <el-tooltip :content="scope.row.Description" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.Description }}</span>
+            <el-tooltip :content="scope.row.comment" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.comment }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
 
-        <el-table-column label="确认标志" sortable>
+        <el-table-column label="提示">
           <template #default="scope">
-            <el-tooltip :content="scope.row.verify" placement="top" effect="light">
+            <el-tooltip :content="verifyMap[scope.row.verify]" placement="top" effect="light">
               <span class="highlight">{{ verifyMap[scope.row.verify] }}</span>
             </el-tooltip>
           </template>
@@ -108,7 +104,7 @@
   </el-card>
 
   <!-- 上传配置弹出框 start-->
-  <el-dialog title="上传配置文件" v-model="uploadDialogVisible" width="25%">
+  <el-dialog title="上传配置文件" v-model="uploadDialogVisible" width="50%">
     <el-form>
       <el-form-item label="文件路径">
 
@@ -125,34 +121,26 @@
             </el-button>
             <input type="file" ref="fileInput" style="display: none;" @change="handleFileChange" />
           </el-col>
+          <el-col :span="24"></el-col>
+          <el-col :span="24">
+            <el-form>
+              <el-form-item label="代码地址">
+                <el-input v-model="codeUrl" placeholder="请输入代码仓库地址（如：https://gitee.com/xxx/xxx.git）"></el-input>
+              </el-form-item>
+            </el-form>
+          </el-col>
         </el-row>
 
       </el-form-item>
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="uploadDialogVisible = false">取消</el-button>
+        <el-button @click="cancelUploadConfig">取消</el-button>
         <el-button type="primary" @click="confirmUpload" color="#00B890">确认</el-button>
       </span>
     </template>
   </el-dialog>
   <!-- 上传配置弹出框 end -->
-
-  <!-- 上传代码地址弹出框 start-->
-  <el-dialog title="上传代码地址" v-model="uploadUrlDialogVisible" width="40%">
-    <el-form>
-      <el-form-item label="代码地址">
-        <el-input v-model="codeUrl" placeholder="请输入代码仓库地址（如：https://gitee.com/xxx/xxx.git）"></el-input>
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="uploadUrlDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmUploadUrl" color="#00B890">确认</el-button>
-      </span>
-    </template>
-  </el-dialog>
-  <!-- 上传代码地址弹出框 end -->
 
   <!-- 修改参数弹出框 start-->
   <el-dialog align-center v-model="editParamDialogFormVisible" width="42%" destroy-on-close>
@@ -193,8 +181,12 @@ import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElNotification, ElMessageBox } from 'element-plus'
 import { exportExcel } from "../../utils/exprotExcel"
 import { uploadConfig, uploadCodeUrl, getParamInfoAll, getParamInfo, deleteParamInfo } from '../../api/param/paramInfo';
+import { getTypeTree } from '../../api/rule/ruleMaintenance';
 import ParamModify from './components/ParamModify.vue'
 import ParamAdd from './components/ParamAdd.vue'
+
+// 分类树
+const typeTree = ref([])
 
 // 状态映射
 const statusMap = {
@@ -205,8 +197,9 @@ const statusMap = {
 
 // 标志映射
 const verifyMap = {
-  '0': '未确认',
-  '1': '已确认'
+  '0': '正常',
+  '1': '增量',
+  '2': '未扫描到参数信息，建议修改或作废'
 }
 
 // 修改参数弹窗状态
@@ -222,10 +215,8 @@ const uploadDialogVisible = ref(false)
 const filePath = ref('')
 const fileInput = ref(null)
 const selectedFile = ref(null)
-
-// 上传代码地址弹窗状态
-const uploadUrlDialogVisible = ref(false)
 const codeUrl = ref('')
+
 
 const state = reactive({
   // 搜索表单内容
@@ -248,7 +239,7 @@ const params = {
   // 'pageIndex': state.pageIndex,
   // 'pageSize': state.pageSize,
   // 'status': state.status ==-1 ? '':state.status,
-  'Variable_Name': state.paramValue,
+  'parameterKey': state.paramValue,
 }
 const loadData = async (state: any) => {
   state.loading = true
@@ -257,15 +248,16 @@ const loadData = async (state: any) => {
 
   const { data } = await getParamInfoAll()
   if (data.code !== 200) {
-    ElNotification({
+    ElMessage({
       type: 'error',
-      title: '错误',
-      message: data.msg,
-      duration: 0
+      message: '数据加载失败',
     })
   } else {
-    state.tableData = data.data.list
-    state.total = data.data.totalCount
+    ElMessage({
+      type: 'success',
+      message: '数据加载成功',
+    })
+    state.tableData = data.data
     state.loading = false
     state.showTable = true
   }
@@ -287,14 +279,14 @@ const tableRowStatus = ({ row, rowIndex }) => {
 
 // 验证参数并进行搜索
 const validateAndSearch = () => {
-  const Variable_NameRegex = /^[a-zA-Z0-9_.]{1,100}$/
+  const variableNameRegex = /^[a-zA-Z0-9_.]{1,100}$/
   if (state.paramValue === '') {
     ElMessage({
       type: 'error',
       message: '请输入参数名称',
     })
   }
-  else if (!Variable_NameRegex.test(state.paramValue) && state.paramValue !== '') {
+  else if (!variableNameRegex.test(state.paramValue) && state.paramValue !== '') {
     ElMessage({
       type: 'error',
       message: '参数名称不合法！（仅限字母、数字、小数点和下划线，长度不超过100个字符）',
@@ -315,12 +307,6 @@ const search = () => {
     })
     loadData(state)
   }
-}
-
-// 全部查询
-const searchAll = () => {
-  state.paramValue = ""
-  loadData(state)
 }
 
 // 重置搜索
@@ -368,40 +354,6 @@ const confirmUpload = async () => {
   const formData = new FormData()
   formData.append('file', selectedFile.value)
 
-  try {
-    const response = await uploadConfig(formData)
-    console.log('文件上传成功', response)
-    uploadDialogVisible.value = false
-
-    selectedFile.value = null
-    filePath.value = ''
-
-    loadData(state) // 上传成功后重新查询
-    ElMessage({
-      type: 'success',
-      message: '文件上传成功',
-    })
-
-  } catch (error) {
-    console.error('文件上传失败', error)
-    uploadDialogVisible.value = false
-    selectedFile.value = null
-    filePath.value = ''
-
-    ElMessage({
-      type: 'error',
-      message: '文件上传失败',
-    })
-
-  }
-}
-
-// 上传代码地址
-const uploadUrl = () => {
-  uploadUrlDialogVisible.value = true
-}
-
-const confirmUploadUrl = async () => {
   if (!codeUrl.value) {
     alert('请输入代码地址')
     return
@@ -411,20 +363,62 @@ const confirmUploadUrl = async () => {
   }
 
   try {
-    const response = await uploadCodeUrl(params)
-    console.log('代码地址上传成功', response)
-    uploadUrlDialogVisible.value = false
-    codeUrl.value = ''
+    const response = await uploadConfig(formData)
+    uploadDialogVisible.value = false
 
-    loadData(state) // 上传成功后重新查询
+    // selectedFile.value = null
+    filePath.value = ''
+    if (response.data.code === 200) {
+      ElMessage({
+        type: 'success',
+        message: '文件上传成功',
+      })
+      loadData(state) // 上传成功后重新查询
+    }
+    else {
+      ElMessage({
+        type: 'error',
+        message: response.data.msg,
+
+      })
+    }
+
+  } catch (error) {
+    console.error('文件上传失败', error)
+    uploadDialogVisible.value = false
+    // selectedFile.value = null
+    filePath.value = ''
+
     ElMessage({
-      type: 'success',
-      message: '代码地址上传成功',
+      type: 'error',
+      message: '文件上传失败',
     })
+  }
+
+  try {
+    const response = await uploadCodeUrl(params)
+    if (response.data.code !== 200) {
+      codeUrl.value = ''
+
+      loadData(state) // 上传成功后重新查询
+      ElMessage({
+        type: 'success',
+        message: '代码地址上传成功',
+      })
+    }
+    else {
+      console.log('代码地址上传失败', response)
+      codeUrl.value = ''
+
+
+      ElMessage({
+        type: 'error',
+        message: response.data.msg,
+      })
+    }
 
   } catch (error) {
     console.error('代码地址上传失败', error)
-    uploadUrlDialogVisible.value = false
     codeUrl.value = ''
 
     ElMessage({
@@ -433,13 +427,22 @@ const confirmUploadUrl = async () => {
     })
 
   }
+
+}
+
+// 取消上传配置文件
+const cancelUploadConfig = () => {
+  uploadDialogVisible.value = false
+  // selectedFile.value = null
+  filePath.value = ''
+  codeUrl.value = ''
 }
 
 // 参数信息
 const paramInfo = ref({
   paramId: '',// 参数ID
-  Variable_Name: '',// 参数名称
-  Description: '',// 参数描述
+  parameterKey: '',// 参数名称
+  comment: '',// 参数描述
   type1: '',// 一级分类
   type2: '',// 二级分类
   status: '',// 参数状态
@@ -451,8 +454,8 @@ const paramModify = async (row) => {
   editParamDialogFormVisible.value = true;
 
   paramInfo.value.paramId = row.paramId;
-  paramInfo.value.Variable_Name = row.Variable_Name;
-  paramInfo.value.Description = row.Description;
+  paramInfo.value.parameterKey = row.parameterKey;
+  paramInfo.value.comment = row.comment;
   paramInfo.value.type1 = row.type1;
   paramInfo.value.type2 = row.type2;
   paramInfo.value.status = row.status;
@@ -465,8 +468,8 @@ const closeEditParamForm = () => {
   // 重置表单数据
   paramInfo.value = {
     paramId: '',// 参数ID
-    Variable_Name: '',// 参数名称
-    Description: '',// 参数描述
+    parameterKey: '',// 参数名称
+    comment: '',// 参数描述
     type1: '',// 一级分类 
     type2: '',// 二级分类
     status: '',// 参数状态
@@ -485,8 +488,8 @@ const closeAddParamForm = () => {
   // 重置表单数据
   paramInfo.value = {
     paramId: '',// 参数ID
-    Variable_Name: '',// 参数名称
-    Description: '',// 参数描述
+    parameterKey: '',// 参数名称
+    comment: '',// 参数描述
     type1: '',// 一级分类 
     type2: '',// 二级分类
     status: '',// 参数状态
@@ -545,15 +548,15 @@ const column = [
   },
   {
     label: '命名空间',
-    name: 'Namespace_Name',
+    name: 'namespace',
   },
   {
     label: '参数名称',
-    name: 'Variable_Name',
+    name: 'parameterKey',
   },
   {
     label: '参数描述',
-    name: 'Description',
+    name: 'comment',
   },
   {
     label: '确认标志',
@@ -570,6 +573,25 @@ const exportExcelData = () => {
     autoWidth: true,
   })
 }
+
+// // 获取分类树
+// const getType = async () => {
+//   const { data } = await getTypeTree()
+//   if (data.code === 200) {
+//     typeTree = data.data
+//   } else {
+//     ElMessage({
+//       type: 'error',
+//       message: '获取分类树失败',
+//     })
+//   }
+// }
+
+// // 根据分类ID获取分类名称
+// const getTypeName = (typeId) => {
+//   const type = typeTree.value.find((item) => item.id === typeId)
+//   return type ? type.categoryName : ''
+// }
 
 // // 分页序号不乱
 // const Nindex = (index) => {

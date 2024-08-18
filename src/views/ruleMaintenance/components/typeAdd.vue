@@ -3,25 +3,27 @@
         <el-row>
             <el-col :span="24">
                 <el-form-item label="新增分类" prop="level">
-                    <el-select v-model="level" placeholder="请选择分类层级" @change="handleLevelChange">
-                        <el-option label="一级分类" value="1"></el-option>
-                        <el-option label="二级分类" value="2"></el-option>
+                    <el-select v-model="formType.level" :disabled="isAddInFirstLevel" placeholder="请选择分类层级"
+                        @change="handleLevelChange">
+                        <el-option v-for="item in levelOptions" :key="item.value" :label="item.label"
+                            :value="item.value"></el-option>
                     </el-select>
                 </el-form-item>
             </el-col>
 
-            <el-col :span="24" v-if="level == 1">
+            <el-col :span="24" v-if="formType.level == 1">
                 <el-form-item label="匹配类型" prop="matchType">
                     <el-select v-model="formType.matchType" placeholder="请选择匹配类型">
-                        <el-option label="前缀匹配" value="0"></el-option>
-                        <el-option label="代码扫描" value="1"></el-option>
+                        <el-option label="前缀匹配" value="1"></el-option>
+                        <el-option label="代码扫描" value="2"></el-option>
                     </el-select>
                 </el-form-item>
             </el-col>
 
-            <el-col :span="24" v-if="level == 2">
+            <el-col :span="24" v-if="formType.level == 2">
                 <el-form-item label="上级分类" prop="parentId">
-                    <el-select v-model="formType.parentId" placeholder="请选择上级分类" @change="handleParentChange">
+                    <el-select v-model="formType.parentId" :disabled="isAddInFirstLevel" placeholder="请选择上级分类"
+                        @change="handleParentChange">
                         <el-option v-for="item in TypeOptions" :key="item.id" :label="item.categoryName"
                             :value="item.id"></el-option>
                     </el-select>
@@ -34,7 +36,7 @@
                 </el-form-item>
             </el-col>
 
-            <el-col :span="24" v-if="formType.matchType == 0 && level != 1">
+            <el-col :span="24" v-if="formType.matchType == 1 && formType.level != 1">
                 <el-form-item label="匹配前缀" prop="prefix">
                     <el-input v-model="formType.prefix" placeholder="（格式类似于：spring.cloud.netflix.eureka）" />
                 </el-form-item>
@@ -56,40 +58,57 @@ import { getTypeTree, addType } from "../../../api/rule/ruleMaintenance"
 
 const emit = defineEmits(['closeAddTypeForm', 'success'])
 
+const props = defineProps(['typeInfo', 'isAddInFirstLevel'])
+const typeInfo = ref(props.typeInfo)
+const isAddInFirstLevel = ref(props.isAddInFirstLevel)
+
+// 分类层级名称
+const levelOptions = [
+    { label: '一级分类', value: 1 },
+    { label: '二级分类', value: 2 },
+]
+
 const TypeOptions = ref([])
 const subLoading = ref(false)
 const ruleFormRef = ref<FormInstance>()
 
-// 分类层级
-const level = ref(null)
-
 // 表单数据
 const formType = reactive({
+    level: null,// 分类层级
+    matchType: null,// 匹配类型 0-前缀匹配 1-代码扫描
     parentId: null,// 上级分类
     categoryName: '',// 类型名称
     prefix: '',// 匹配前缀
-    matchType: null,// 匹配类型 0-前缀匹配 1-代码扫描
 })
+
+// 给表单填充数据
+for (const key in formType) {
+    formType[key] = typeInfo.value[key]
+}
 
 // 定义表单约束规则对象
 const rules = reactive<FormRules>({
     level: [
         { required: true, message: '请选择分类层级', trigger: 'blur' },
     ],
+    matchType: [
+        { required: (form) => form.level === 1, message: '请选择匹配类型', trigger: 'blur' },
+    ],
     parentId: [
-        { required: true, message: '请选择上级分类', trigger: 'blur' },
+        { required: (form) => form.level === 2, message: '请选择上级分类', trigger: 'blur' },
     ],
     categoryName: [
         { required: true, message: '请输入类型名称', trigger: 'blur' },
     ],
     prefix: [
-        { required: true, message: '请输入匹配前缀', trigger: 'blur' },
+        { required: (form) => form.level === 2 && form.matchType !== null && form.matchType === 1, message: '请输入匹配前缀', trigger: 'blur' },
     ],
 })
 
+
 // 选择上级分类时，获取匹配类型
 const handleParentChange = (selectedId) => {
-    const selectedType = TypeOptions.find(item => item.id === selectedId);
+    const selectedType = TypeOptions.value.find(item => item.id === selectedId);
     if (selectedType) {
         formType.matchType = selectedType.matchType;
     }
@@ -97,8 +116,13 @@ const handleParentChange = (selectedId) => {
 
 // 选择分类层级时，清空上级分类和匹配类型
 const handleLevelChange = (value) => {
-    level.value = value
-    formType.parentId = null
+    formType.level = value
+    if (formType.level == 1) {
+        formType.parentId = 0
+    }
+    else {
+        formType.parentId = null
+    }
     formType.matchType = null
 }
 
@@ -108,7 +132,13 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
     await formEl.validate(async (valid, fields) => {
         subLoading.value = true
         if (valid) {  // 表单验证通过
-            const { data } = await addType(formType)
+            const params = {
+                matchType: formType.matchType,
+                parentId: formType.parentId,
+                categoryName: formType.categoryName,
+                prefix: formType.prefix,
+            }
+            const { data } = await addType(params)
             if (data.code === 200) {
                 ElMessage.success('添加成功')
                 emit('success')
@@ -117,7 +147,6 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
             }
         } else {
             ElMessage.error('提交失败，你还有未填写的项！')
-            console.log('error submit!', fields)
         }
         subLoading.value = false
     })
@@ -135,7 +164,6 @@ const getTree = async () => {
         TypeOptions.value = data.data
     } else {
         ElMessage.error(data.msg)
-        console.log('获取分类树失败')
     }
 }
 

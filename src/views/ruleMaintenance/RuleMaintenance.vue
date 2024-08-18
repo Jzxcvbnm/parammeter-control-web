@@ -22,6 +22,12 @@
 
                 <el-table-column prop="categoryName" header-align="center" min-width="50" label="类型">
                 </el-table-column>
+                
+                <el-table-column prop="namespace" header-align="center" min-width="50" label="命名空间">
+                </el-table-column>
+
+                <el-table-column prop="codeUrl" header-align="center" min-width="50" label="代码地址">
+                </el-table-column>
 
                 <el-table-column prop="parentId" header-align="center" align="center" label="上级类型">
                     <template #default="scope">
@@ -34,9 +40,10 @@
                 <el-table-column prop="prefix" header-align="center" align="center" label="分类前缀">
                 </el-table-column>
 
-                <el-table-column fixed="right" header-align="center" align="center" width="150" label="操作">
+                <el-table-column fixed="right" header-align="center" align="center" width="200" label="操作">
                     <template #default="scope">
-                        <el-button type="text" size="small" @click="UpdateHandle(scope.row.id)">修改</el-button>
+                        <el-button v-if="scope.row.parentId == 0" type="text" size="small" @click="addHandle(2, scope.row)">新增</el-button>
+                        <el-button type="text" size="small" @click="UpdateHandle(scope.row)">修改</el-button>
                         <el-button type="text" size="small" @click="deleteHandle(scope.row)"
                             :disabled="scope.row.children && scope.row.children.length > 0">删除</el-button>
                     </template>
@@ -48,7 +55,7 @@
     </el-card>
 
     <!-- 修改参数弹出框 start-->
-    <el-dialog align-center v-model="editTypeDialogFormVisible" width="42%" destroy-on-close>
+    <el-dialog align-center v-model="editTypeDialogFormVisible" width="42%" destroy-on-close :before-close="closeEditTypeForm">·
         <template #header="{ close, titleId, titleClass }">
             <div class="my-header">
                 <el-icon size="26px">
@@ -64,7 +71,7 @@
     <!--修改参数弹出框 end -->
 
     <!-- 添加参数弹出框 start-->
-    <el-dialog align-center v-model="addTypeDialogFormVisible" width="42%" destroy-on-close>
+    <el-dialog align-center v-model="addTypeDialogFormVisible" width="42%" destroy-on-close :before-close="closeAddTypeForm">
         <template #header="{ close, titleId, titleClass }">
             <div class="my-header">
                 <el-icon size="26px">
@@ -74,7 +81,7 @@
             </div>
         </template>
         <!--添加参数组件 start-->
-        <TypeAdd :typeInfo="typeInfo" @closeAddTypeForm="closeAddTypeForm" @success="success" />
+        <TypeAdd :typeInfo="typeInfo" :isAddInFirstLevel="isAddInFirstLevel" @closeAddTypeForm="closeAddTypeForm" @success="success" />
         <!--添加参数组件 end-->
     </el-dialog>
     <!-- 添加参数弹出框 end -->
@@ -85,7 +92,6 @@ import { onMounted, reactive, toRefs, ref } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElNotification, ElMessageBox } from 'element-plus'
 import { exportExcel } from "../../utils/exprotExcel"
-import { treeDataTranslate } from "../../utils/typeTree"
 import { getTypeTree, deleteType } from '../../api/rule/ruleMaintenance';
 import TypeModify from './components/TypeModify.vue'
 import TypeAdd from './components/TypeAdd.vue'
@@ -97,6 +103,8 @@ const editTitle = ref('修改类型信息')
 // 新增类型弹窗状态
 const addTypeDialogFormVisible = ref(false)
 const addTitle = ref('新增类型信息')
+// 是否在一级分类下添加
+const isAddInFirstLevel = ref(false)
 
 // 分类树获取
 const dataList = ref<any[]>([])
@@ -108,6 +116,7 @@ const success = () => {
     getDataList()
     editTypeDialogFormVisible.value = false
     addTypeDialogFormVisible.value = false
+    isAddInFirstLevel.value = false
 }
 
 // 获取数据列表
@@ -117,13 +126,16 @@ const getDataList = async () => {
     const { data } = await getTypeTree()
 
     if (data.code !== 200) {
-        ElNotification({
+        ElMessage({
             type: 'error',
-            title: '错误',
-            message: data.msg,
+            message: data.msg
         })
     }
     else {
+        ElMessage({
+            type: 'success',
+            message: '获取分类成功'
+        })
         dataList.value = data.data
         dataListLoading.value = false
     }
@@ -131,29 +143,40 @@ const getDataList = async () => {
 }
 
 // 添加类型信息
-const addHandle = () => {
+const addHandle = (level = null, row = null) => {
+    if(level&&row){
+        typeInfo.value.level = level;
+        typeInfo.value.parentId = row.id;
+        typeInfo.value.matchType = row.matchType;
+        isAddInFirstLevel.value = true;
+    }
+
     addTypeDialogFormVisible.value = true;
 }
 
 // 类型信息
 const typeInfo = ref({
+    level: null,// 分类级别
     id: '',// 分类ID
     parentId: null,// 上级分类ID
     categoryName: '',// 分类名称
     prefix: '',// 分类前缀
-    matchType: null// 匹配类型
+    matchType: null,// 匹配类型
+    namespace: '',// 命名空间
+    codeUrl: '',// 代码地址
 })
 
 // 修改类型信息
-const UpdateHandle = async (row) => {
-    editTypeDialogFormVisible.value = true;
-
+const UpdateHandle = (row) => {
     typeInfo.value.id = row.id;
     typeInfo.value.parentId = row.parentId;
     typeInfo.value.categoryName = row.categoryName;
     typeInfo.value.prefix = row.prefix;
     typeInfo.value.matchType = row.matchType;
-    console.log(111111111111,typeInfo)
+    typeInfo.value.namespace = row.namespace;
+    typeInfo.value.codeUrl = row.codeUrl;
+
+    editTypeDialogFormVisible.value = true;
 }
 
 // 关闭修改类型弹出框
@@ -161,24 +184,31 @@ const closeEditTypeForm = () => {
     editTypeDialogFormVisible.value = false
     // 重置表单数据
     typeInfo.value = {
+        level: null,// 分类级别
         id: '',// 分类ID
         parentId: null,// 上级分类ID
         categoryName: '',// 分类名称
         prefix: '',// 分类前缀
-        matchType: null// 匹配类型
+        matchType: null,// 匹配类型
+        namespace: '',// 命名空间
+        codeUrl: '',// 代码地址
     }
 }
 
 // 关闭添加类型弹出框
 const closeAddTypeForm = () => {
     addTypeDialogFormVisible.value = false
+    isAddInFirstLevel.value = false
     // 重置表单数据
     typeInfo.value = {
+        level: null,// 分类级别
         id: '',// 分类ID
         parentId: null,// 上级分类ID
         categoryName: '',// 分类名称
         prefix: '',// 分类前缀
-        matchType: null// 匹配类型
+        matchType: null,// 匹配类型
+        namespace: '',// 命名空间
+        codeUrl: '',// 代码地址
     }
 }
 

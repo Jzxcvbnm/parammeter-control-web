@@ -31,10 +31,10 @@
       <!-- <el-table element-loading-text="数据加载中..." v-loading="loading" :data="tableData" -->
       <el-table element-loading-text="数据加载中..." v-loading="false" :data="tableData"
         style="width: 100%;text-align: center" :row-class-name="tableRowStatus"
-        :default-sort="{ prop: 'Namespace_Name', order: 'ascending' }" :cell-style="{ textAlign: 'center' }"
+        :default-sort="{ prop: 'type1', order: 'ascending' }" :cell-style="{ textAlign: 'center' }"
         :header-cell-style="{ fontSize: '12px', background: '#484848', color: 'white', textAlign: 'center' }">
 
-        <el-table-column label="一级分类" sortable>
+        <el-table-column label="一级分类" porp="type1" sortable>
           <template #default="scope">
             <el-tooltip :content="scope.row.type1" placement="top" effect="light">
               <span class="highlight">{{ scope.row.type1 }}</span>
@@ -58,42 +58,42 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="命名空间" prop="Namespace_Name" sortable>
+        <el-table-column label="命名空间" prop="namespace" sortable>
           <template #default="scope">
-            <el-tooltip :content="scope.row.Namespace_Name" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.Namespace_Name }}</span>
+            <el-tooltip :content="scope.row.namespace" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.namespace }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
 
         <el-table-column label="变量名称">
           <template #default="scope">
-            <el-tooltip :content="scope.row.Variable_Name" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.Variable_Name }}</span>
+            <el-tooltip :content="scope.row.variableName" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.variableName }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
 
         <el-table-column label="功能环境">
           <template #default="scope">
-            <el-tooltip :content="scope.row.value_func" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.value_func }}</span>
+            <el-tooltip :content="scope.row.valueFunc" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.valueFunc }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
 
         <el-table-column label="回装环境">
           <template #default="scope">
-            <el-tooltip :content="scope.row.value_reinstall" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.value_reinstall }}</span>
+            <el-tooltip :content="scope.row.valueReinstall" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.valueReinstall }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
 
         <el-table-column label="生产环境">
           <template #default="scope">
-            <el-tooltip :content="scope.row.value_prod" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.value_prod }}</span>
+            <el-tooltip :content="scope.row.valueProd" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.valueProd }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -106,8 +106,8 @@
 
         <el-table-column label="变量描述">
           <template #default="scope">
-            <el-tooltip :content="scope.row.Description" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.Description }}</span>
+            <el-tooltip :content="scope.row.description" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.description }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -239,7 +239,7 @@ const params = {
   // 'pageIndex': state.pageIndex,
   // 'pageSize': state.pageSize,
   // 'status': state.status ==-1 ? '':state.status,
-  'Variable_Name': state.paramValue,
+  'variableName': state.paramValue,
 }
 const loadData = async (state: any) => {
   state.loading = true
@@ -254,8 +254,7 @@ const loadData = async (state: any) => {
       message: data.msg,
     })
   } else {
-    state.tableData = data.data.list
-    state.total = data.data.totalCount
+    state.tableData = data.data
     state.loading = false
     state.showTable = true
   }
@@ -277,14 +276,14 @@ const tableRowStatus = ({ row, rowIndex }) => {
 
 // 验证参数并进行搜索
 const validateAndSearch = () => {
-  const Variable_NameRegex = /^[a-zA-Z0-9_.]{1,100}$/
+  const variableNameRegex = /^[a-zA-Z0-9_.]{1,100}$/
   if (state.paramValue === '') {
     ElMessage({
       type: 'error',
       message: '请输入参数名称',
     })
   }
-  else if (!Variable_NameRegex.test(state.paramValue) && state.paramValue !== '') {
+  else if (!variableNameRegex.test(state.paramValue) && state.paramValue !== '') {
     ElMessage({
       type: 'error',
       message: '参数名称不合法！（仅限字母、数字、小数点和下划线，长度不超过100个字符）',
@@ -388,9 +387,9 @@ const confirmUpload = async () => {
 // 参数信息
 const paramInfo = ref({
   paramId: '',// 参数ID
-  Variable_Name: '',// 参数名称
-  value_prod: '',// 参数值
-  Description: '',// 参数描述
+  variableName: '',// 参数名称
+  valueProd: '',// 参数值
+  description: '',// 参数描述
   type1: '',// 一级分类
   type2: '',// 二级分类
   status: '',// 参数状态
@@ -402,9 +401,9 @@ const paramModify = async (row) => {
   editParamDialogFormVisible.value = true;
 
   paramInfo.value.paramId = row.paramId;
-  paramInfo.value.Variable_Name = row.Variable_Name;
-  paramInfo.value.value_prod = row.value_prod;
-  paramInfo.value.Description = row.Description;
+  paramInfo.value.variableName = row.variableName;
+  paramInfo.value.valueProd = row.valueProd;
+  paramInfo.value.description = row.description;
   paramInfo.value.type1 = row.type1;
   paramInfo.value.type2 = row.type2;
   paramInfo.value.status = row.status;
@@ -425,9 +424,9 @@ const closeEditParamForm = () => {
   // 重置表单数据
   paramInfo.value = {
     paramId: '',// 参数ID
-    Variable_Name: '',// 参数名称
-    value_prod: '',// 参数值
-    Description: '',// 参数描述
+    variableName: '',// 参数名称
+    valueProd: '',// 参数值
+    description: '',// 参数描述
     type1: '',// 一级分类 
     type2: '',// 二级分类
     status: '',// 参数状态
@@ -506,27 +505,27 @@ const column = [
   },
   {
     label: '命名空间',
-    name: 'Namespace_Name',
+    name: 'namespace',
   },
   {
     label: '参数名称',
-    name: 'Variable_Name',
+    name: 'variableName',
   },
   {
     label: '功能环境',
-    name: 'value_func',
+    name: 'valueFunc',
   },
   {
     label: '回装环境',
-    name: 'value_reinstall',
+    name: 'valueReinstall',
   },
   {
     label: '生产环境',
-    name: 'value_prod',
+    name: 'valueProd',
   },
   {
     label: '参数描述',
-    name: 'Description',
+    name: 'description',
   },
   {
     label: '确认标志',

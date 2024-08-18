@@ -11,7 +11,7 @@ import { useMenuStore } from '../store/modules/menu'
 export const staticRouter = [
     {
         path: '/',
-        redirect: "/login",
+        redirect: "/home",
         isMenu: false
     },
     {
