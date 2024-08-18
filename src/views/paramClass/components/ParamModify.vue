@@ -2,53 +2,60 @@
 
   <el-form ref="ruleFormRef" :rules="rules" :model="formParam" label-width="80px">
     <el-row>
-      <el-col :span="12">
-        <el-form-item label="参数名称" prop="Variable_Name">
-          <el-input value="{{formParam.Variable_Name}}" placeholder="" readonly />
+      <el-col :span="24">
+        <el-form-item label="参数名称" prop="parameterKey">
+          <el-input v-model="formParam.parameterKey" placeholder="" readonly />
         </el-form-item>
       </el-col>
 
-      <el-col :span="12">
-        <el-form-item label="参数描述" prop="Description">
-          <el-input v-model="formParam.Description" type="textarea" :autosize="{ minRows: 2, maxRows: 4}"
-                placeholder="请输入参数描述" />
+      <!-- <el-col :span="24">
+        <el-form-item label="生产环境" prop="valueProd">
+          <el-input v-model="formParam.valueProd" placeholder="请输入生产环境参数值" />
         </el-form-item>
       </el-col>
 
-      <el-col :span="8">
-        <el-cascader :options="TypeOptions" @change="typeChange"></el-cascader>
-      </el-col>
-
-      <el-col :span="8">
-        <el-form-item label="一级分类" prop="type1">
-          <el-input v-model="formParam.type1" placeholder="请选择一级分类" readonly />
+      <el-col :span="24">
+        <el-form-item label="回装环境" prop="valueReinstall">
+          <el-input v-model="formParam.valueReinstall" placeholder="请输入回装环境参数值" />
         </el-form-item>
       </el-col>
 
-      <el-col :span="8">
-        <el-form-item label="二级分类" prop="type2">
-          <el-input v-model="formParam.type2" placeholder="请选择二级分类" readonly />
+      <el-col :span="24">
+        <el-form-item label="功能测试" prop="valueFunc">
+          <el-input v-model="formParam.valueFunc" placeholder="请输入功能测试参数值" />
+        </el-form-item>
+      </el-col> -->
+
+      <el-col :span="24">
+        <el-form-item label="参数描述" prop="comment">
+          <el-input v-model="formParam.comment" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }"
+            placeholder="请输入参数描述" />
+        </el-form-item>
+      </el-col>
+
+      <el-col :span="24">
+        <el-form-item label="参数分类" prop="type">
+          <el-cascader v-model="formParam.type" :options="TypeOptions" @change="typeChange"
+            placeholder="请选择参数分类"></el-cascader>
         </el-form-item>
       </el-col>
 
       <el-col :span="12">
         <el-form-item label="参数状态" prop="status">
           <el-select v-model="formParam.status" placeholder="请选择参数状态">
-            <el-option label="未启用" value="0"></el-option>
-            <el-option label="生效" value="1"></el-option>
-            <el-option label="作废" value="2"></el-option>
+            <el-option v-for="item in statusMap" :key="item.value" :label="item.label" :value="item.value"></el-option>
           </el-select>
         </el-form-item>
       </el-col>
-      
-      <el-col :span="12">
-        <el-form-item label="确认标志" prop="verify">
-          <el-select v-model="formParam.verify" placeholder="请选择确认标志">
-            <el-option label="已确认" value="1"></el-option>
-            <el-option label="未确认" value="0"></el-option>
+
+      <!-- <el-col :span="12">
+        <el-form-item label="确认状态" prop="checkStatus">
+          <el-select v-model="formParam.checkStatus" placeholder="请选择确认状态">
+            <el-option v-for="item in checkStatusMap" :key="item.value" :label="item.label"
+              :value="item.value"></el-option>
           </el-select>
         </el-form-item>
-      </el-col>
+      </el-col> -->
 
     </el-row>
   </el-form>
@@ -63,10 +70,24 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { treeDataTranslate } from "../../../utils/typeTree"
 import { updateParamInfo } from "../../../api/param/paramInfo"
 import { getTypeTree } from "../../../api/rule/ruleMaintenance"
 
+
+// 状态映射
+const statusMap = [
+  { label: '未启用', value: 0 },
+  { label: '生效', value: 1 },
+  { label: '作废', value: 2 },
+]
+
+// 确认状态映射
+const checkStatusMap = [
+  { label: '推荐分类', value: 0 },
+  { label: '已确认', value: 1 },
+  { label: '未找到使用', value: 2 },
+  { label: '未找到分类', value: 3 },
+]
 
 const emit = defineEmits(['closeEditParamForm', 'success'])
 
@@ -78,18 +99,23 @@ const TypeOptions = ref([])
 const subLoading = ref(false)
 const ruleFormRef = ref<FormInstance>()
 const formParam = reactive({
-  paramId: '',// 参数ID
-  Variable_Name:'',// 参数名称
-  Description: '',// 参数描述
-  type1: '',// 一级分类
-  type2: '',// 二级分类
-  status:'',// 参数状态
-  verify: '',// 确认标志
+  id: null,// 参数ID
+  parameterKey: null,// 参数名称
+  // valueProd: null, // 生产环境参数值
+  // valueReinstall: null, // 回装环境参数值
+  // valueFunc: null, // 功能测试参数值
+  comment: null,// 参数描述
+  type: [],// 参数分类
+  type1: null,// 一级分类
+  type2: null,// 二级分类
+  status: null,// 参数状态
+  // checkStatus: null,// 确认状态
 })
 // 给表单填充数据
 for (const key in formParam) {
   formParam[key] = paramInfo.value[key]
 }
+
 // 定义表单约束规则对象
 const rules = reactive<FormRules>({
   type1: [
@@ -101,8 +127,8 @@ const rules = reactive<FormRules>({
   status: [
     { required: true, message: '请选择参数状态', trigger: 'blur' },
   ],
-  verify: [
-    { required: true, message: '请选择确认标志', trigger: 'blur' },
+  checkStatus: [
+    { required: true, message: '请选择确认状态', trigger: 'blur' },
   ]
 })
 
@@ -112,7 +138,19 @@ const modifyParam = async (formEl: FormInstance | undefined) => {
   await formEl.validate(async (valid, fields) => {
     subLoading.value = true
     if (valid) {  // 表单验证通过
-      const { data } = await updateParamInfo(formParam)
+      const params = {
+        id: paramInfo.value.id,
+        // parameterKey: formParam.parameterKey,
+        // valueProd: formParam.valueProd,
+        // valueReinstall: formParam.valueReinstall,
+        // valueFunc: formParam.valueFunc,
+        comment: formParam.comment,
+        type1: formParam.type1,
+        type2: formParam.type2,
+        status: formParam.status,
+        // checkStatus: formParam.checkStatus,
+      }
+      const { data } = await updateParamInfo(params)
       if (data.code === 200) {
         ElMessage.success(data.msg)
         emit('success')
@@ -136,23 +174,40 @@ const close = () => {
 const getTree = async () => {
   const { data } = await getTypeTree()
   if (data.code === 200) {
-    TypeOptions.value = treeDataTranslate(data.data)
+    TypeOptions.value = transformData(data.data)
+    initType();
   }
-  else{
+  else {
     ElMessage.error(data.msg)
     console.log('获取分类树失败')
   }
 }
 
-const typeChange = (value)=> {
-      if (value && value.length === 2) {
-        formParam.type1 = value[0];
-        formParam.type2 = value[1];
-      } else {
-        formParam.type1 = '';
-        formParam.type2 = '';
-      }
-    }
+const transformData = (data) => {
+  return data.map(item => {
+    return {
+      value: item.id,
+      label: item.categoryName,
+      children: item.children.length ? transformData(item.children) : undefined
+    };
+  });
+};
+
+const typeChange = (value) => {
+  if (value && value.length === 2) {
+    formParam.type1 = value[0];
+    formParam.type2 = value[1];
+  } else {
+    formParam.type1 = '';
+    formParam.type2 = '';
+  }
+}
+
+const initType = () => {
+  if (paramInfo.value.type1 && paramInfo.value.type2) {
+    formParam.type = [paramInfo.value.type1, paramInfo.value.type2]
+  }
+}
 
 onMounted(async () => {
   getTree();

@@ -27,47 +27,35 @@
         </el-col>
 
         <el-col :span="12" style="margin-bottom: 5px; text-align: right;">
+          <el-button type="primary" @click="batchConfirm" color="#00B890" style="width: 125px;">批量确认</el-button>
           <el-button type="primary" @click="exportExcelData" color="#00B890" style="width: 125px;">导出excel文件</el-button>
         </el-col>
       </el-row>
       <el-table element-loading-text="数据加载中..." v-loading="loading" :data="tableData"
-        style="width: 100%;text-align: center" :row-class-name="tableRowStatus"
-        :default-sort="{ prop: 'type1', order: 'ascending' }" :cell-style="{ textAlign: 'center' }"
+        style="width: 100%;text-align: center" :row-class-name="tableRowClassName"
+        @selection-change="handleSelectionChange" :default-sort="{ prop: 'checkStatus', order: 'ascending' }"
+        :cell-style="{ textAlign: 'center' }"
         :header-cell-style="{ fontSize: '12px', background: '#484848', color: 'white', textAlign: 'center' }">
 
+        <el-table-column type="selection" width="50" align="center" fixed></el-table-column>
+
         <el-table-column label="一级分类" prop="parentName" sortable>
+        </el-table-column>
+
+        <el-table-column label="二级分类" prop="categoryName" sortable>
+        </el-table-column>
+
+        <el-table-column label="参数状态" prop="status" sortable>
           <template #default="scope">
-            <el-tooltip :content="scope.row.parentName" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.parentName }}</span>
-            </el-tooltip>
+            <span class="highlight">{{ statusMap[scope.row.status] }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="二级分类" sortable>
-          <template #default="scope">
-            <el-tooltip :content="scope.row.categoryName" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.categoryName }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="参数状态" sortable>
-          <template #default="scope">
-            <el-tooltip :content="scope.row.status" placement="top" effect="light">
-              <span class="highlight">{{ statusMap[scope.row.status] }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
 
         <el-table-column label="命名空间" prop="namespace" sortable>
-          <template #default="scope">
-            <el-tooltip :content="scope.row.namespace" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.namespace }}</span>
-            </el-tooltip>
-          </template>
         </el-table-column>
 
-        <el-table-column label="变量名称">
+        <el-table-column label="参数名称" prop="parameterKey">
           <template #default="scope">
             <el-tooltip :content="scope.row.parameterKey" placement="top" effect="light">
               <span class="highlight">{{ scope.row.parameterKey }}</span>
@@ -75,7 +63,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="变量描述">
+        <el-table-column label="参数描述" prop="comment">
           <template #default="scope">
             <el-tooltip :content="scope.row.comment" placement="top" effect="light">
               <span class="highlight">{{ scope.row.comment }}</span>
@@ -83,11 +71,10 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="确认状态">
+        <el-table-column label="确认状态" prop="checkStatus" sortable>
           <template #default="scope">
-            <el-tooltip :content="checkStatusMap[scope.row.checkStatus]" placement="top" effect="light">
-              <span class="highlight">{{ checkStatusMap[scope.row.checkStatus] }}</span>
-            </el-tooltip>
+            <span class="highlight">{{ checkStatusMap[scope.row.checkStatus] }}</span>
+            <!-- <span :class="formatStatusColor(scope.row.checkStatus)"> {{ formatStatus(scope.row.checkStatus) }}</span> -->
           </template>
         </el-table-column>
 
@@ -104,7 +91,8 @@
   </el-card>
 
   <!-- 上传配置弹出框 start-->
-  <el-dialog title="上传配置文件" v-model="uploadDialogVisible" width="25%" destroy-on-close :before-close="cancelUploadConfig">
+  <el-dialog title="上传配置文件" v-model="uploadDialogVisible" width="25%" destroy-on-close
+    :before-close="cancelUploadConfig">
     <el-form>
       <el-form-item label="文件路径">
 
@@ -135,7 +123,8 @@
   <!-- 上传配置弹出框 end -->
 
   <!-- 修改参数弹出框 start-->
-  <el-dialog align-center v-model="editParamDialogFormVisible" width="42%" destroy-on-close :before-close="closeEditParamForm">
+  <el-dialog align-center v-model="editParamDialogFormVisible" width="42%" destroy-on-close
+    :before-close="closeEditParamForm">
     <template #header="{ close, titleId, titleClass }">
       <div class="my-header">
         <el-icon size="26px">
@@ -151,7 +140,8 @@
   <!--修改参数弹出框 end -->
 
   <!-- 添加参数弹出框 start-->
-  <el-dialog align-center v-model="addParamDialogFormVisible" width="42%" destroy-on-close :before-close="closeAddParamForm">
+  <el-dialog align-center v-model="addParamDialogFormVisible" width="42%" destroy-on-close
+    :before-close="closeAddParamForm">
     <template #header="{ close, titleId, titleClass }">
       <div class="my-header">
         <el-icon size="26px">
@@ -187,11 +177,14 @@ const statusMap = {
 
 // 确认状态映射
 const checkStatusMap = {
-  1: '推荐分类',
-  2: '已确认',
-  3: '未找到使用',
-  4: '未找到分类',
+  0: '推荐分类',
+  1: '已确认',
+  2: '未找到使用',
+  3: '未找到分类',
 }
+
+// 批量确认状态
+const multipleSelection = []
 
 // 修改参数弹窗状态
 const editParamDialogFormVisible = ref(false)
@@ -254,18 +247,53 @@ const loadData = async (state: any) => {
 
 }
 
-// 筛选未分类参数
-const tableRowStatus = ({ row, rowIndex }) => {
-  if (row.type1 === '其他' || row.type2 === '其他') {
-    return 'danger-row';
+// 标识参数状态
+//   0: '推荐分类',
+//   1: '已确认',
+//   2: '未找到使用',
+//   3: '未找到分类',
+const tableRowClassName = ({ row, rowIndex }) => {
+  if (row.checkStatus === 0) {
+    return 'info-row'
+  } else if (row.checkStatus === 2) {
+    return 'danger-row'
+  } else if (row.checkStatus === 3) {
+    return 'warning-row'
   }
-  if (row.checkStatus !== 1) {
-    return 'warning-row';
-  }
-
   return '';
 }
 
+// // 格式化状态显示
+// const formatStatus = (status) => {
+//   if (status === 0) {
+//     return '推荐分类'
+//   }
+//   else if (status === 1) {
+//     return '已确认'
+//   }
+//   else if (status === 2) {
+//     return '未找到使用'
+//   }
+//   else if (status === 3) {
+//     return '未找到分类'
+//   }
+//   else {
+//     return ''
+//   }
+// }
+
+// // 格式化状态显示的颜色
+// const formatStatusColor = (status) => {
+//   if (status === 0) {
+//     return 'info-row'
+//   } else if (status === 2) {
+//     return 'danger-row'
+//   } else if (status === 3) {
+//     return 'warning-row'
+//   } else {
+//     return ''
+//   }
+// }
 
 // 验证参数并进行搜索
 const validateAndSearch = () => {
@@ -295,7 +323,7 @@ const search = () => {
       type: 'info',
       message: `参数: ${state.paramValue} 搜索内容如下`,
     })
-    loadData(state)
+    // loadData(state)
   }
 }
 
@@ -389,8 +417,12 @@ const cancelUploadConfig = () => {
 
 // 参数信息
 const paramInfo = ref({
-  paramId: null,// 参数ID
+  id: null,// 参数ID
+  namespace: null,// 命名空间
   parameterKey: null,// 参数名称
+  valueProd: null,// 生产环境参数值
+  valueReinstall: null,// 回装环境参数值
+  valueFunc: null,//, // 功能测试参数值
   comment: null,// 参数描述
   type1: null,// 一级分类
   type2: null,// 二级分类
@@ -402,13 +434,16 @@ const paramInfo = ref({
 const paramModify = async (row) => {
   editParamDialogFormVisible.value = true;
 
-  paramInfo.value.paramId = row.paramId;
+  paramInfo.value.id = row.id;
   paramInfo.value.parameterKey = row.parameterKey;
+  // paramInfo.value.valueProd = row.valueProd;
+  // paramInfo.value.valueReinstall = row.valueReinstall;
+  // paramInfo.value.valueFunc = row.valueFunc;
   paramInfo.value.comment = row.comment;
   paramInfo.value.type1 = row.type1;
   paramInfo.value.type2 = row.type2;
   paramInfo.value.status = row.status;
-  paramInfo.value.checkStatus = row.checkStatus;
+  // paramInfo.value.checkStatus = row.checkStatus;
 }
 
 // 关闭修改参数弹出框
@@ -416,8 +451,12 @@ const closeEditParamForm = () => {
   editParamDialogFormVisible.value = false
   // 重置表单数据
   paramInfo.value = {
-    paramId: null,// 参数ID
+    id: null,// 参数ID
+    namespace: null,// 命名空间
     parameterKey: null,// 参数名称
+    valueProd: null,// 生产环境参数值
+    valueReinstall: null,// 回装环境参数值
+    valueFunc: null,// 功能测试参数值
     comment: null,// 参数描述
     type1: null,// 一级分类
     type2: null,// 二级分类
@@ -436,8 +475,12 @@ const closeAddParamForm = () => {
   addParamDialogFormVisible.value = false
   // 重置表单数据
   paramInfo.value = {
-    paramId: null,// 参数ID
+    id: null,// 参数ID
+    namespace: null,// 命名空间
     parameterKey: null,// 参数名称
+    valueProd: null,// 生产环境参数值
+    valueReinstall: null,// 回装环境参数值
+    valueFunc: null,// 功能测试参数值
     comment: null,// 参数描述
     type1: null,// 一级分类
     type2: null,// 二级分类
@@ -458,7 +501,7 @@ const paramDelete = (row) => {
     }
   ).then(async () => {
     const params = {
-      'paramId': row.paramId,
+      'id': row.id,
     }
     const { data } = await deleteParamInfo(params)
     if (data.code === 200) {
@@ -481,15 +524,25 @@ const paramDelete = (row) => {
   })
 }
 
+// 处理多选框选中事件
+const handleSelectionChange = (val) => {
+  multipleSelection = val;
+}
+
+// 批量确认
+const batchConfirm = () => {
+
+}
+
 // 导出列表
 const column = [
   {
     label: '一级分类',
-    name: 'type1',
+    name: 'parentName',
   },
   {
     label: '二级分类',
-    name: 'type2',
+    name: 'categoryName',
   },
   {
     label: '参数状态',
@@ -552,6 +605,27 @@ const { tableData, loading, paramValue, showTable } = toRefs(state)
 </script>
 
 <style scoped>
+/*标识参数状态*/
+.el-table>>>.info-row {
+  background: #f0f0f0;
+  /* color: #adadad; */
+}
+
+.el-table>>>.warning-row {
+  background: #ffd485;
+  /* color: #ffdc5e; */
+}
+
+.el-table>>>.danger-row {
+  background: #ff8888;
+  /* color: #fe6262; */
+}
+
+.el-table>>>.success-row {
+  background: #c5ffa5;
+  /* color: #b0fd87; */
+}
+
 .card-header {
   display: flex;
   /* 弹性布局 */

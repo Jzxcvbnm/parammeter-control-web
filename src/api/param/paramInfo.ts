@@ -12,7 +12,7 @@ export function uploadConfig(data) {
 // 获取参数信息
 export function getParamInfoAll() {
     return request({
-        url: '/param_info/all',
+        url: '/param_info/category/all',
         method: 'get',
 
     })
