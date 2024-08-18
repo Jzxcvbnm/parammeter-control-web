@@ -51,10 +51,11 @@
                 <el-table-column fixed="right" header-align="center" align="center" width="200" label="操作">
                     <template #default="scope">
                         <el-button v-if="scope.row.parentId == 0" type="text" size="small"
-                            @click="addHandle(2, scope.row)">新增</el-button>
-                        <el-button type="text" size="small" @click="UpdateHandle(scope.row)">修改</el-button>
+                            @click="addHandle(2, scope.row)" :disabled="scope.row.id == 1">新增</el-button>
+                        <el-button type="text" size="small" @click="UpdateHandle(scope.row)"
+                            :disabled="scope.row.id == 1">修改</el-button>
                         <el-button type="text" size="small" @click="deleteHandle(scope.row)"
-                            :disabled="scope.row.children && scope.row.children.length > 0">删除</el-button>
+                            :disabled="(scope.row.children && scope.row.children.length > 0) || (scope.row.id == 1)">删除</el-button>
                     </template>
                 </el-table-column>
             </el-table>
