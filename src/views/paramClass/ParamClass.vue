@@ -607,7 +607,7 @@ const { tableData, loading, paramValue, showTable } = toRefs(state)
 <style scoped>
 /*标识参数状态*/
 .el-table>>>.info-row {
-  background: #f0f0f0;
+  background: #f0f0f080;
   /* color: #adadad; */
 }
 
