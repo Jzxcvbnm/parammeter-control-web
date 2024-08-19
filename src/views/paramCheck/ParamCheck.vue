@@ -18,63 +18,50 @@
     <div class="table-box">
       <el-row :gutter="10">
         <el-col :span="12" style="margin-bottom: 5px;">
-          <el-input :prefix-icon="Search" v-model="paramValue" @keyup.enter="validateAndSearch"
+          <el-input :prefix-icon="Search" v-model="searchValue" @keyup.enter="validateAndSearch"
             placeholder="查询参数（支持模糊查询）" style="width: 213px;" />
 
           <el-button type="primary" @click="validateAndSearch" color="#00B890">查询</el-button>
           <el-button type="primary" @click="resetSearch" color="#00B890">重置</el-button>
         </el-col>
         <el-col :span="12" style="margin-bottom: 5px; text-align: right;">
+          <el-button type="primary" @click="batchConfirm" color="#00B890" style="width: 125px;">批量保存</el-button>
           <el-button type="primary" @click="exportExcelData" color="#00B890" style="width: 125px;">导出excel文件</el-button>
         </el-col>
       </el-row>
-      <!-- <el-table element-loading-text="数据加载中..." v-loading="loading" :data="tableData" -->
-      <el-table element-loading-text="数据加载中..." v-loading="false" :data="tableData"
-        style="width: 100%;text-align: center" :row-class-name="tableRowStatus"
-        :default-sort="{ prop: 'type1', order: 'ascending' }" :cell-style="{ textAlign: 'center' }"
+      <el-table element-loading-text="数据加载中..." v-loading="loading" :data="tableData"
+        style="width: 100%;text-align: center" :row-class-name="tableRowClassName"
+        @selection-change="handleSelectionChange" :default-sort="{ prop: '', order: 'ascending' }"
+        :cell-style="{ textAlign: 'center' }"
         :header-cell-style="{ fontSize: '12px', background: '#484848', color: 'white', textAlign: 'center' }">
 
-        <el-table-column label="一级分类" porp="type1" sortable>
+        <el-table-column label="一级分类" prop="parentName" sortable>
+        </el-table-column>
+
+        <el-table-column label="二级分类" prop="categoryName" sortable>
+        </el-table-column>
+
+        <el-table-column label="参数状态" prop="status" sortable>
           <template #default="scope">
-            <el-tooltip :content="scope.row.type1" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.type1 }}</span>
-            </el-tooltip>
+            <el-tag :type="getStatusType(scope.row.status)">
+              {{ statusMap[scope.row.status] }}
+            </el-tag>
           </template>
         </el-table-column>
 
-        <el-table-column label="二级分类" sortable>
-          <template #default="scope">
-            <el-tooltip :content="scope.row.type2" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.type2 }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="参数状态" sortable>
-          <template #default="scope">
-            <el-tooltip :content="scope.row.status" placement="top" effect="light">
-              <span class="highlight">{{ statusMap[scope.row.status] }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
 
         <el-table-column label="命名空间" prop="namespace" sortable>
+        </el-table-column>
+
+        <el-table-column label="参数名称" prop="parameterKey">
           <template #default="scope">
-            <el-tooltip :content="scope.row.namespace" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.namespace }}</span>
+            <el-tooltip :content="scope.row.parameterKey" placement="top" effect="light">
+              <span class="highlight">{{ scope.row.parameterKey }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
 
-        <el-table-column label="变量名称">
-          <template #default="scope">
-            <el-tooltip :content="scope.row.variableName" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.variableName }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="功能环境">
+        <el-table-column label="功能环境" prop="valueFunc">
           <template #default="scope">
             <el-tooltip :content="scope.row.valueFunc" placement="top" effect="light">
               <span class="highlight">{{ scope.row.valueFunc }}</span>
@@ -82,7 +69,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="回装环境">
+        <el-table-column label="回装环境" prop="valueReinstall">
           <template #default="scope">
             <el-tooltip :content="scope.row.valueReinstall" placement="top" effect="light">
               <span class="highlight">{{ scope.row.valueReinstall }}</span>
@@ -90,7 +77,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="生产环境">
+        <el-table-column label="生产环境" prop="valueProd">
           <template #default="scope">
             <el-tooltip :content="scope.row.valueProd" placement="top" effect="light">
               <span class="highlight">{{ scope.row.valueProd }}</span>
@@ -98,13 +85,15 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="新值">
+        <el-table-column label="生产更新">
           <template #default="scope">
-            <el-input v-model="scope.row.newValue" placeholder=""></el-input>
+            <el-tooltip :content="scope.row.newValue" placement="top" effect="light">
+              <el-input v-model="scope.row.newValue" placeholder=""></el-input>
+            </el-tooltip>
           </template>
         </el-table-column>
 
-        <el-table-column label="变量描述">
+        <el-table-column label="参数描述" prop="description">
           <template #default="scope">
             <el-tooltip :content="scope.row.description" placement="top" effect="light">
               <span class="highlight">{{ scope.row.description }}</span>
@@ -112,11 +101,11 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="确认标志" sortable>
+        <el-table-column label="比对状态" prop="change" sortable>
           <template #default="scope">
-            <el-tooltip :content="scope.row.verify" placement="top" effect="light">
-              <span class="highlight">{{ verifyMap[scope.row.verify] }}</span>
-            </el-tooltip>
+            <el-tag :type="getChangeStatus(scope.row.change)">
+              {{ changeMap[scope.row.change] }}
+            </el-tag>
           </template>
         </el-table-column>
 
@@ -127,17 +116,13 @@
           </template>
         </el-table-column>
       </el-table>
-
-      <el-col :span="24" style="margin-top: 5px; text-align: right;">
-        <el-button type="primary" @click="confirmChange" color="#00B890">保存</el-button>
-        <el-button type="primary" @click="resetSearch" color="#00B890">取消</el-button>
-      </el-col>
     </div>
     <!--表格区域 end-->
   </el-card>
 
   <!-- 上传配置弹出框 start-->
-  <el-dialog title="上传版本变量清单" v-model="uploadDialogVisible" width="25%">
+  <el-dialog title="上传配置文件" v-model="uploadDialogVisible" width="25%" destroy-on-close
+    :before-close="cancelUploadConfig">
     <el-form>
       <el-form-item label="文件路径">
 
@@ -160,7 +145,7 @@
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="uploadDialogVisible = false">取消</el-button>
+        <el-button @click="cancelUploadConfig">取消</el-button>
         <el-button type="primary" @click="confirmUpload" color="#00B890">确认</el-button>
       </span>
     </template>
@@ -168,7 +153,8 @@
   <!-- 上传配置弹出框 end -->
 
   <!-- 修改参数弹出框 start-->
-  <el-dialog align-center v-model="editParamDialogFormVisible" width="42%" destroy-on-close>
+  <el-dialog align-center v-model="editParamDialogFormVisible" width="42%" destroy-on-close
+    :before-close="closeEditParamForm">
     <template #header="{ close, titleId, titleClass }">
       <div class="my-header">
         <el-icon size="26px">
@@ -178,7 +164,7 @@
       </div>
     </template>
     <!--修改参数组件 start-->
-    <ParamModify :paramInfo="paramInfo" :tableData="tableData" :updateTableData="updateTableData" @closeEditParamForm="closeEditParamForm" @success="success" />
+    <ParamModify :paramInfo="paramInfo" @closeEditParamForm="closeEditParamForm" @success="success" />
     <!--修改参数组件 end-->
   </el-dialog>
   <!--修改参数弹出框 end -->
@@ -189,20 +175,28 @@ import { onMounted, reactive, toRefs, ref } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElNotification, ElMessageBox } from 'element-plus'
 import { exportExcel } from "../../utils/exprotExcel"
-import { uploadConfig, getParamInfoAll, getParamInfo, saveChecklist } from '../../api/param/paramInfo';
+import { paramCheck, saveComparelist } from '../../api/param/paramCheck';
+import ParamModify from './components/ParamModify.vue'
+
 
 // 状态映射
 const statusMap = {
-  '0': '未启用',
-  '1': '生效',
-  '2': '作废'
+  '0': '已启用',
+  '1': '未启用',
+  '2': '已作废'
 }
 
-// 标志映射
-const verifyMap = {
-  '0': '未确认',
-  '1': '已确认'
+// 比对状态
+const changeMap = {
+  0: '正常',
+  1: '新增',
+  2: '自身有变更',
+  3: '同类有变更',
+  4: '未找到使用'
 }
+
+// 批量确认状态
+const multipleSelection = []
 
 // 修改参数弹窗状态
 const editParamDialogFormVisible = ref(false)
@@ -214,17 +208,13 @@ const filePath = ref('')
 const fileInput = ref(null)
 const selectedFile = ref(null)
 
-// 上传代码地址弹窗状态
-const uploadUrlDialogVisible = ref(false)
-const codeUrl = ref('')
-
 const state = reactive({
   // 搜索表单内容
-  paramValue: '',
+  searchValue: '',
   // 表格全部信息
   tableData: [],
   // 当前点击的编辑信息
-  paramInfo: null,
+  // paramInfo: null,
   // status: null,
   // total: 0, //总条数
   // pageSize: 10, //每页显示行数
@@ -234,87 +224,107 @@ const state = reactive({
 
 })
 
-// 获取参数列表数据
-const params = {
-  // 'pageIndex': state.pageIndex,
-  // 'pageSize': state.pageSize,
-  // 'status': state.status ==-1 ? '':state.status,
-  'variableName': state.paramValue,
-}
-const loadData = async (state: any) => {
+const loadData = async (data) => {
   state.loading = true
   // 先清空数据
   state.tableData = []
-
-  const { data } = await getParamInfoAll()
-  if (data.code !== 200) {
-    ElNotification({
-      type: 'error',
-      title: '错误',
-      message: data.msg,
-    })
-  } else {
-    state.tableData = data.data
-    state.loading = false
-    state.showTable = true
-  }
-
+  state.tableData = data.data
+  state.loading = false
+  state.showTable = true
 }
 
-// 筛选未分类参数
-const tableRowStatus = ({ row, rowIndex }) => {
-  if (row.type1 === '其他' || row.type2 === '其他') {
-    return 'danger-row';
+// 比对状态
+//   0: '推荐分类',
+//   1: '已确认',
+//   2: '未找到分类',
+//   3: '未找到使用',
+const tableRowClassName = ({ row, rowIndex }) => {
+  if (row.checkStatus === 0) {
+    return 'info-row'
+  } else if (row.checkStatus === 2) {
+    return 'danger-row'
+  } else if (row.checkStatus === 3) {
+    return 'warning-row'
   }
-  if (row.status !== 1) {
-    return 'warning-row';
-  }
-
   return '';
 }
 
+const getChangeStatus = (status) => {
+  if (status === 1) {
+    return 'info'
+  }
+  else if (status === 2) {
+    return 'danger'
+  }
+  else if (status === 3) {
+    return 'danger'
+  }
+  else if (status === 4) {
+    return 'warning'
+  }
+}
+
+// 标识参数状态
+const getStatusType = (status) => {
+  if (status === 0) {
+    return 'success'
+  }
+  else if (status === 1) {
+    return 'info'
+  }
+  else if (status === 2) {
+    return 'danger'
+  }
+}
 
 // 验证参数并进行搜索
 const validateAndSearch = () => {
-  const variableNameRegex = /^[a-zA-Z0-9_.]{1,100}$/
-  if (state.paramValue === '') {
+  const variableNameRegex = /^[a-zA-Z0-9_.\u4e00-\u9fa5]{1,150}$/
+
+  if (state.searchValue === '') {
     ElMessage({
       type: 'error',
       message: '请输入参数名称',
     })
-  }
-  else if (!variableNameRegex.test(state.paramValue) && state.paramValue !== '') {
+  } else if (!variableNameRegex.test(state.searchValue) && state.searchValue !== '') {
     ElMessage({
       type: 'error',
-      message: '参数名称不合法！（仅限字母、数字、小数点和下划线，长度不超过100个字符）',
+      message: '参数名称不合法！（仅限字母、数字、小数点、下划线和中文字符，长度不超过150个字符）',
     })
   } else {
-    // state.pageIndex = 1
-    // state.pageSize = 10
     search()
   }
 }
 
+
 // 搜索
 const search = () => {
-  if (state.paramValue !== null) {
+  if (state.searchValue !== null) {
     ElMessage({
       type: 'info',
-      message: `参数: ${state.paramValue} 搜索内容如下`,
+      message: `参数: ${state.searchValue} 搜索内容如下`,
     })
-    loadData(state)
-  }
-}
 
-// 全部查询
-const searchAll = () => {
-  state.paramValue = ""
-  loadData(state)
+    // 创建忽略大小写的正则表达式
+    const regex = new RegExp(state.searchValue, 'i');
+
+    // 使用正则表达式进行多字段查询
+    const searchData = state.tableData.filter(item => {
+      return regex.test(item.parameterKey) ||  // 参数名称
+        regex.test(item.namespace) ||  // 命名空间
+        regex.test(item.parentName) ||  // 一级分类
+        regex.test(item.categoryName) ||  // 二级分类
+        regex.test(item.status) ||  // 参数状态
+        regex.test(item.checkStatus);  // 确认状态
+    })
+
+    state.tableData = searchData;
+  }
 }
 
 // 重置搜索
 const resetSearch = () => {
-  state.paramValue = ""
+  state.searchValue = ""
   state.showTable = false
   state.tableData = []
   // state.pageSize = 10 //每页显示行数
@@ -333,6 +343,7 @@ const uploadFile = () => {
   uploadDialogVisible.value = true
 }
 
+// 选择文件
 const selectFile = () => {
   fileInput.value.click()
 }
@@ -357,65 +368,75 @@ const confirmUpload = async () => {
   formData.append('file', selectedFile.value)
 
   try {
-    const response = await uploadConfig(formData)
-    console.log('文件上传成功', response)
+    const response = await paramCheck(formData)
     uploadDialogVisible.value = false
 
-    selectedFile.value = null
+    // selectedFile.value = null
     filePath.value = ''
+    if (response.data.code === 200) {
+      ElMessage({
+        type: 'success',
+        message: '文件上传成功',
+      })
+      loadData(response.data) // 上传成功后重新查询
+    }
+    else {
+      ElMessage({
+        type: 'error',
+        message: response.data.msg,
 
-    loadData(state) // 上传成功后重新查询
-    ElMessage({
-      type: 'success',
-      message: '文件上传成功',
-    })
+      })
+    }
 
   } catch (error) {
     console.error('文件上传失败', error)
     uploadDialogVisible.value = false
-    selectedFile.value = null
+    // selectedFile.value = null
     filePath.value = ''
 
     ElMessage({
       type: 'error',
       message: '文件上传失败',
     })
-
   }
+}
+
+// 取消上传配置文件
+const cancelUploadConfig = () => {
+  uploadDialogVisible.value = false
+  selectedFile.value = null
+  filePath.value = ''
 }
 
 // 参数信息
 const paramInfo = ref({
-  paramId: '',// 参数ID
-  variableName: '',// 参数名称
-  valueProd: '',// 参数值
-  description: '',// 参数描述
-  type1: '',// 一级分类
-  type2: '',// 二级分类
-  status: '',// 参数状态
-  verify: '',// 确认标志
+  id: null,// 参数ID
+  namespace: null,// 命名空间
+  parameterKey: null,// 参数名称
+  valueProd: null,// 生产环境参数值
+  valueReinstall: null,// 回装环境参数值
+  valueFunc: null,//, // 功能环境参数值
+  newValue: null,// 生产环境更新值
+  description: null,// 参数描述
+  type1: null,// 一级分类
+  type2: null,// 二级分类
+  status: null,// 参数状态
+  checkStatus: null,// 确认状态
+  change: null,// 比对状态
 })
 
 // 修改参数信息
 const paramModify = async (row) => {
   editParamDialogFormVisible.value = true;
 
-  paramInfo.value.paramId = row.paramId;
-  paramInfo.value.variableName = row.variableName;
+  paramInfo.value.id = row.id;
+  paramInfo.value.parameterKey = row.parameterKey;
   paramInfo.value.valueProd = row.valueProd;
   paramInfo.value.description = row.description;
   paramInfo.value.type1 = row.type1;
   paramInfo.value.type2 = row.type2;
   paramInfo.value.status = row.status;
-  paramInfo.value.verify = row.verify;
-}
-
-// 更新 tableData
-const updateTableData = (paramId, updatedData) => {
-  const index = state.tableData.findIndex(item => item.paramId === paramId);
-  if (index !== -1) {
-    state.tableData[index] = { ...updatedData };
-  }
+  // paramInfo.value.checkStatus = row.checkStatus;
 }
 
 // 关闭修改参数弹出框
@@ -423,14 +444,19 @@ const closeEditParamForm = () => {
   editParamDialogFormVisible.value = false
   // 重置表单数据
   paramInfo.value = {
-    paramId: '',// 参数ID
-    variableName: '',// 参数名称
-    valueProd: '',// 参数值
-    description: '',// 参数描述
-    type1: '',// 一级分类 
-    type2: '',// 二级分类
-    status: '',// 参数状态
-    verify: '',// 确认标志
+    id: null,// 参数ID
+    namespace: null,// 命名空间
+    parameterKey: null,// 参数名称
+    valueProd: null,// 生产环境参数值
+    valueReinstall: null,// 回装环境参数值
+    valueFunc: null,// 功能环境参数值
+    newValue: null,// 生产环境更新值
+    description: null,// 参数描述
+    type1: null,// 一级分类
+    type2: null,// 二级分类
+    status: null,// 参数状态
+    checkStatus: null,// 确认状态
+    change: null,// 比对状态
   }
 }
 
@@ -446,7 +472,7 @@ const paramDelete = (row) => {
     }
   ).then(() => {
     // 直接在tableData中删除对应的行
-    const index = tableData.value.findIndex(item => item.paramId === row.paramId);
+    const index = tableData.value.findIndex(item => item.id === row.id);
     if (index !== -1) {
       tableData.value.splice(index, 1);
       ElMessage({
@@ -467,24 +493,56 @@ const paramDelete = (row) => {
   });
 };
 
+// 处理多选框选中事件
+const handleSelectionChange = (val) => {
+  // 清空 multipleSelection 数组
+  multipleSelection.splice(0, multipleSelection.length);
 
-// 保存清单信息
-const confirmChange = async () => {
-  const params = {
-    'data': state.tableData,
+  // 遍历传入的 val 数组
+  for (let i = 0; i < val.length; i++) {
+    // 将 val 数组中每个元素添加到 multipleSelection 数组中
+    multipleSelection.push(val[i]);
   }
-  const { data } = await saveChecklist(params)
-  if (data.code === 200) {
-    ElMessage({
-      type: 'success',
-      message: '保存成功!',
-    })
-    loadData(state) // 保存成功后重新查询
-    closeEditParamForm()
-  } else {
+};
+
+
+// 批量确认
+const batchConfirm = () => {
+  if (multipleSelection.length === 0) {
     ElMessage({
       type: 'error',
-      message: data.msg,
+      message: '请选择需要确认的参数',
+    })
+  }
+
+  else {
+    ElMessageBox.confirm(
+      '此操作将确认所选参数, 是否继续?',
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    ).then(async () => {
+      const { data } = await saveComparelist(multipleSelection)
+      if (data.code === 200) {
+        ElMessage({
+          type: 'success',
+          message: '批量确认成功!',
+        })
+        loadData(state) // 确认成功后重新查询
+      } else {
+        ElMessage({
+          type: 'error',
+          message: data.msg,
+        })
+      }
+    }).catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '已取消确认',
+      })
     })
   }
 }
@@ -493,11 +551,11 @@ const confirmChange = async () => {
 const column = [
   {
     label: '一级分类',
-    name: 'type1',
+    name: 'parentName',
   },
   {
     label: '二级分类',
-    name: 'type2',
+    name: 'categoryName',
   },
   {
     label: '参数状态',
@@ -509,7 +567,7 @@ const column = [
   },
   {
     label: '参数名称',
-    name: 'variableName',
+    name: 'parameterKey',
   },
   {
     label: '功能环境',
@@ -529,9 +587,10 @@ const column = [
   },
   {
     label: '确认标志',
-    name: 'verify',
+    name: 'checkStatus',
   },
 ]
+
 // 导出excel
 const exportExcelData = () => {
   exportExcel({
@@ -543,35 +602,32 @@ const exportExcelData = () => {
   })
 }
 
-// // 分页序号不乱
-// const Nindex = (index) => {
-//   // 当前页数 - 1 * 每页数据条数 + 1
-//   const page = state.pageIndex // 当前页码
-//   const pagesize = state.pageSize // 每页条数
-//   return index + 1 + (page - 1) * pagesize
-// }
-
-// // 处理页大小变化
-// const handleSizeChange = (newSize: number) => {
-//   state.pageSize = newSize
-//   loadData(state)
-// }
-
-// // 切换页面的执行事件，  val 当前页码
-// const changePage = (val) => {
-//   state.pageIndex = val;
-//   loadData(state);
-// }
-
 //挂载后加载数据
 onMounted(() => {
 
 })
 
-const { tableData, loading, paramValue, showTable } = toRefs(state)
+const { tableData, loading, searchValue, showTable } = toRefs(state)
 </script>
 
 <style scoped>
+/*标识参数状态*/
+:deep(.el-table .info-row) {
+  background: #f0f0f080;
+}
+
+:deep(.el-table .warning-row) {
+  background: #ffdc85;
+}
+
+:deep(.el-table .danger-row) {
+  background: #ff8888;
+}
+
+:deep(.el-table .success-row) {
+  background: #c5ffa5;
+}
+
 .card-header {
   display: flex;
   /* 弹性布局 */

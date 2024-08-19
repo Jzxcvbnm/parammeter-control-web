@@ -210,7 +210,7 @@ const state = reactive({
   // 表格全部信息
   tableData: [],
   // 当前点击的编辑信息
-  paramInfo: null,
+  // paramInfo: null,
   // status: null,
   // total: 0, //总条数
   // pageSize: 10, //每页显示行数
@@ -332,8 +332,6 @@ const search = () => {
   }
 }
 
-
-
 // 重置搜索
 const resetSearch = () => {
   state.searchValue = ""
@@ -429,7 +427,7 @@ const paramInfo = ref({
   parameterKey: null,// 参数名称
   valueProd: null,// 生产环境参数值
   valueReinstall: null,// 回装环境参数值
-  valueFunc: null,//, // 功能测试参数值
+  valueFunc: null,//, // 功能环境参数值
   description: null,// 参数描述
   type1: null,// 一级分类
   type2: null,// 二级分类
@@ -463,7 +461,7 @@ const closeEditParamForm = () => {
     parameterKey: null,// 参数名称
     valueProd: null,// 生产环境参数值
     valueReinstall: null,// 回装环境参数值
-    valueFunc: null,// 功能测试参数值
+    valueFunc: null,// 功能环境参数值
     description: null,// 参数描述
     type1: null,// 一级分类
     type2: null,// 二级分类
@@ -487,7 +485,7 @@ const closeAddParamForm = () => {
     parameterKey: null,// 参数名称
     valueProd: null,// 生产环境参数值
     valueReinstall: null,// 回装环境参数值
-    valueFunc: null,// 功能测试参数值
+    valueFunc: null,// 功能环境参数值
     description: null,// 参数描述
     type1: null,// 一级分类
     type2: null,// 二级分类
@@ -624,26 +622,6 @@ const exportExcelData = () => {
   })
 }
 
-// // 分页序号不乱
-// const Nindex = (index) => {
-//   // 当前页数 - 1 * 每页数据条数 + 1
-//   const page = state.pageIndex // 当前页码
-//   const pagesize = state.pageSize // 每页条数
-//   return index + 1 + (page - 1) * pagesize
-// }
-
-// // 处理页大小变化
-// const handleSizeChange = (newSize: number) => {
-//   state.pageSize = newSize
-//   loadData(state)
-// }
-
-// // 切换页面的执行事件，  val 当前页码
-// const changePage = (val) => {
-//   state.pageIndex = val;
-//   loadData(state);
-// }
-
 //挂载后加载数据
 onMounted(() => {
   loadData(state)
@@ -656,22 +634,18 @@ const { tableData, loading, searchValue, showTable } = toRefs(state)
 /*标识参数状态*/
 :deep(.el-table .info-row) {
   background: #f0f0f080;
-  /* color: #adadad; */
 }
 
 :deep(.el-table .warning-row) {
-  background: #ffd485;
-  /* color: #ffdc5e; */
+  background: #ffdc85;
 }
 
 :deep(.el-table .danger-row) {
   background: #ff8888;
-  /* color: #fe6262; */
 }
 
 :deep(.el-table .success-row) {
   background: #c5ffa5;
-  /* color: #b0fd87; */
 }
 
 .card-header {

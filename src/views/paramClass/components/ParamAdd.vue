@@ -26,8 +26,8 @@
             </el-col>
 
             <el-col :span="24">
-                <el-form-item label="功能测试" prop="valueFunc">
-                    <el-input v-model="formParam.valueFunc" placeholder="请输入功能测试参数值" />
+                <el-form-item label="功能环境" prop="valueFunc">
+                    <el-input v-model="formParam.valueFunc" placeholder="请输入功能环境参数值" />
                 </el-form-item>
             </el-col>
 
@@ -104,7 +104,7 @@ const formParam = reactive({
     namespace: null, // 命名空间
     valueProd: null,// 生产环境参数值
     valueReinstall: null,// 回装环境参数值
-    valueFunc: null,// 功能测试参数值
+    valueFunc: null,// 功能环境参数值
     description: null, // 参数描述
     type: [], // 参数分类
     type1: null, // 一级分类
@@ -128,7 +128,7 @@ const rules = reactive<FormRules>({
         { required: true, message: '请输入回装环境参数值', trigger: 'blur' },
     ],
     valueFunc: [
-        { required: true, message: '请输入功能测试参数值', trigger: 'blur' },
+        { required: true, message: '请输入功能环境参数值', trigger: 'blur' },
     ],
     type: [
         { required: true, message: '请选择参数分类', trigger: 'blur' },

@@ -81,7 +81,7 @@ export const asyncRoutes = [
                 path: '/param_check',
                 name: 'param_check',
                 meta: {
-                    title: '参数校验',
+                    title: '参数比对',
                     icon: 'Tickets',
                     auth: 'PARAM_CHECK'
                 },

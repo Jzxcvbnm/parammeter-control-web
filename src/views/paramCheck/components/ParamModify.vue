@@ -2,59 +2,66 @@
 
   <el-form ref="ruleFormRef" :rules="rules" :model="formParam" label-width="80px">
     <el-row>
-      <el-col :span="12">
-        <el-form-item label="参数名称" prop="Variable_Name">
-          <el-input value="{{formParam.Variable_Name}}" placeholder="" readonly />
+      <el-col :span="24">
+        <el-form-item label="参数名称" prop="parameterKey" :readonly="true">
+          <el-input v-model="formParam.parameterKey" placeholder="请输入参数名称" />
         </el-form-item>
       </el-col>
 
-      <el-col :span="12">
-        <el-form-item label="参数值" prop="Default_Value">
-          <el-input v-model="formParam.value_prod" placeholder="请输入参数值" />
+      <el-col :span="24">
+        <el-form-item label="生产环境" prop="valueProd">
+          <el-input v-model="formParam.valueProd" placeholder="请输入生产环境参数值" />
         </el-form-item>
       </el-col>
 
-      <el-col :span="12">
-        <el-form-item label="参数描述" prop="Description">
-          <el-input v-model="formParam.Description" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }"
+      <el-col :span="24">
+        <el-form-item label="回装环境" prop="valueReinstall">
+          <el-input v-model="formParam.valueReinstall" placeholder="请输入回装环境参数值" />
+        </el-form-item>
+      </el-col>
+
+      <el-col :span="24">
+        <el-form-item label="功能环境" prop="valueFunc">
+          <el-input v-model="formParam.valueFunc" placeholder="请输入功能环境参数值" />
+        </el-form-item>
+      </el-col>
+
+      <el-col :span="24">
+        <el-form-item label="生产更新" prop="newValue">
+          <el-input v-model="formParam.newValue" placeholder="请输入更新参数值" />
+        </el-form-item>
+      </el-col>
+
+      <el-col :span="24">
+        <el-form-item label="参数描述" prop="description">
+          <el-input v-model="formParam.description" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }"
             placeholder="请输入参数描述" />
         </el-form-item>
       </el-col>
 
-      <el-col :span="8">
-        <el-cascader :options="TypeOptions" @change="typeChange"></el-cascader>
-      </el-col>
-
-      <el-col :span="8">
-        <el-form-item label="一级分类" prop="type1">
-          <el-input v-model="formParam.type1" placeholder="请选择一级分类" readonly />
-        </el-form-item>
-      </el-col>
-
-      <el-col :span="8">
-        <el-form-item label="二级分类" prop="type2">
-          <el-input v-model="formParam.type2" placeholder="请选择二级分类" readonly />
+      <el-col :span="24">
+        <el-form-item label="参数分类" prop="type">
+          <el-cascader v-model="formParam.type" :options="TypeOptions" @change="typeChange"
+            placeholder="请选择参数分类"></el-cascader>
         </el-form-item>
       </el-col>
 
       <el-col :span="12">
         <el-form-item label="参数状态" prop="status">
           <el-select v-model="formParam.status" placeholder="请选择参数状态">
-            <el-option label="未启用" value="0"></el-option>
-            <el-option label="生效" value="1"></el-option>
-            <el-option label="作废" value="2"></el-option>
+            <el-option v-for="item in statusMap" :key="item.value" :label="item.label" :value="item.value"></el-option>
           </el-select>
         </el-form-item>
       </el-col>
 
-      <el-col :span="12">
-        <el-form-item label="确认标志" prop="verify">
-          <el-select v-model="formParam.verify" placeholder="请选择确认标志">
-            <el-option label="已确认" value="1"></el-option>
-            <el-option label="未确认" value="0"></el-option>
+      <!-- <el-col :span="12">
+        <el-form-item label="确认状态" prop="checkStatus">
+          <el-select v-model="formParam.checkStatus" placeholder="请选择确认状态">
+            <el-option v-for="item in checkStatusMap" :key="item.value" :label="item.label"
+              :value="item.value"></el-option>
           </el-select>
         </el-form-item>
-      </el-col>
+      </el-col> -->
 
     </el-row>
   </el-form>
@@ -69,14 +76,28 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { treeDataTranslate } from "../../../utils/typeTree"
 import { updateParamInfo } from "../../../api/param/paramInfo"
 import { getTypeTree } from "../../../api/rule/ruleMaintenance"
 
 
+// 状态映射
+const statusMap = [
+  { label: '已启用', value: 0 },
+  { label: '未启用', value: 1 },
+  { label: '已作废', value: 2 },
+]
+
+// 确认状态映射
+const checkStatusMap = [
+  { label: '推荐分类', value: 0 },
+  { label: '已确认', value: 1 },
+  { label: '未找到分类', value: 2 },
+  { label: '未找到使用', value: 3 },
+]
+
 const emit = defineEmits(['closeEditParamForm', 'success'])
 
-const props = defineProps(['paramInfo', 'tableData', 'updateTableData'])
+const props = defineProps(['paramInfo'])
 const paramInfo = ref(props.paramInfo)
 
 const TypeOptions = ref([])
@@ -84,36 +105,34 @@ const TypeOptions = ref([])
 const subLoading = ref(false)
 const ruleFormRef = ref<FormInstance>()
 const formParam = reactive({
-  paramId: '',// 参数ID
-  Variable_Name: '',// 参数名称
-  value_prod: '',// 参数值
-  Description: '',// 参数描述
-  type1: '',// 一级分类
-  type2: '',// 二级分类
-  status: '',// 参数状态
-  verify: '',// 确认标志
+  id: null,// 参数ID
+  parameterKey: null,// 参数名称
+  valueProd: null, // 生产环境参数值
+  valueReinstall: null, // 回装环境参数值
+  valueFunc: null, // 功能环境参数值
+  newValue: null, // 生产更新
+  description: null,// 参数描述
+  type: [],// 参数分类
+  type1: null,// 一级分类
+  type2: null,// 二级分类
+  status: null,// 参数状态
+  change: null,// 比对状态
+  // checkStatus: null,// 确认状态
 })
 // 给表单填充数据
 for (const key in formParam) {
   formParam[key] = paramInfo.value[key]
 }
+
 // 定义表单约束规则对象
 const rules = reactive<FormRules>({
-  value_prod: [
-    { required: true, message: '请输入参数值', trigger: 'blur' },
+  parameterKey: [
+    { required: true, message: '请输入参数名称', trigger: 'blur' },
+    { min: 1, max: 50, message: '参数名称长度在 1 到 50 个字符', trigger: 'blur' },
   ],
-  type1: [
-    { required: true, message: '请选择一级分类', trigger: 'blur' },
+  type: [
+    { required: true, message: '请选择参数分类', trigger: 'blur' },
   ],
-  type2: [
-    { required: true, message: '请选择二级分类', trigger: 'blur' },
-  ],
-  status: [
-    { required: true, message: '请选择参数状态', trigger: 'blur' },
-  ],
-  verify: [
-    { required: true, message: '请选择确认标志', trigger: 'blur' },
-  ]
 })
 
 // 修改参数信息
@@ -122,18 +141,33 @@ const modifyParam = async (formEl: FormInstance | undefined) => {
   await formEl.validate(async (valid, fields) => {
     subLoading.value = true
     if (valid) {  // 表单验证通过
-      // 修改 tableData 中对应的数据
-      props.updateTableData(formParam.paramId, formParam);
-      ElMessage.success('修改成功');
-      emit('success');
+      const params = {
+        id: formParam.id,
+        parameterKey: formParam.parameterKey,
+        valueProd: formParam.valueProd,
+        valueReinstall: formParam.valueReinstall,
+        valueFunc: formParam.valueFunc,
+        newValue: formParam.newValue,
+        description: formParam.description,
+        type1: formParam.type1,
+        type2: formParam.type2,
+        status: formParam.status,
+        // checkStatus: formParam.checkStatus,
+      }
+      const { data } = await updateParamInfo(params)
+      if (data.code === 200) {
+        ElMessage.success(data.msg)
+        emit('success')
+      } else {
+        ElMessage.error(data.msg)
+      }
     } else {
-      ElMessage.error('提交失败，你还有未填写的项！');
-      console.log('error submit!', fields);
+      ElMessage.error('提交失败，你还有未填写的项！')
+      console.log('error submit!', fields)
     }
-    subLoading.value = false;
-  });
+    subLoading.value = false
+  })
 }
-
 
 // 取消表单
 const close = () => {
@@ -144,13 +178,24 @@ const close = () => {
 const getTree = async () => {
   const { data } = await getTypeTree()
   if (data.code === 200) {
-    TypeOptions.value = treeDataTranslate(data.data)
+    TypeOptions.value = transformData(data.data)
+    initType();
   }
   else {
     ElMessage.error(data.msg)
     console.log('获取分类树失败')
   }
 }
+
+const transformData = (data) => {
+  return data.map(item => {
+    return {
+      value: item.id,
+      label: item.categoryName,
+      children: item.children.length ? transformData(item.children) : undefined
+    };
+  });
+};
 
 const typeChange = (value) => {
   if (value && value.length === 2) {
@@ -159,6 +204,12 @@ const typeChange = (value) => {
   } else {
     formParam.type1 = '';
     formParam.type2 = '';
+  }
+}
+
+const initType = () => {
+  if (paramInfo.value.type1 && paramInfo.value.type2) {
+    formParam.type = [paramInfo.value.type1, paramInfo.value.type2]
   }
 }
 
