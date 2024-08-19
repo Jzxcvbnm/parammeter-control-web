@@ -3,7 +3,7 @@ import request from '../request'
 // 上传配置文件
 export function uploadConfig(data) {
     return request({
-        url: '/param_info/category',
+        url: '/param_info/category/upload',
         method: 'post',
         data
     })
