@@ -35,6 +35,8 @@
         :cell-style="{ textAlign: 'center' }"
         :header-cell-style="{ fontSize: '12px', background: '#484848', color: 'white', textAlign: 'center' }">
 
+        <el-table-column type="selection" width="50" align="center" fixed></el-table-column>
+
         <el-table-column label="一级分类" prop="parentName" sortable>
         </el-table-column>
 
@@ -111,7 +113,6 @@
 
         <el-table-column label="操作">
           <template #default="scope">
-            <el-button size="small" style="margin: 0 0 10px 10px;" @click="paramModify(scope.row)">修改</el-button>
             <el-button size="small" style="margin: 0 0 10px 10px;" @click="paramDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -151,23 +152,6 @@
     </template>
   </el-dialog>
   <!-- 上传配置弹出框 end -->
-
-  <!-- 修改参数弹出框 start-->
-  <el-dialog align-center v-model="editParamDialogFormVisible" width="42%" destroy-on-close
-    :before-close="closeEditParamForm">
-    <template #header="{ close, titleId, titleClass }">
-      <div class="my-header">
-        <el-icon size="26px">
-          <EditPen />
-        </el-icon>
-        <h1 id="titleId">{{ editTitle }}</h1>
-      </div>
-    </template>
-    <!--修改参数组件 start-->
-    <ParamModify :paramInfo="paramInfo" @closeEditParamForm="closeEditParamForm" @success="success" />
-    <!--修改参数组件 end-->
-  </el-dialog>
-  <!--修改参数弹出框 end -->
 </template>
 
 <script setup lang="ts">
@@ -176,7 +160,6 @@ import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElNotification, ElMessageBox } from 'element-plus'
 import { exportExcel } from "../../utils/exprotExcel"
 import { paramCheck, saveComparelist } from '../../api/param/paramCheck';
-import ParamModify from './components/ParamModify.vue'
 
 
 // 状态映射
@@ -234,17 +217,23 @@ const loadData = async (data) => {
 }
 
 // 比对状态
-//   0: '推荐分类',
-//   1: '已确认',
-//   2: '未找到分类',
-//   3: '未找到使用',
+//   0: '正常',
+//   1: '新增',
+//   2: '自身有变更',
+//   3: '同类有变更',
+//   4: '未找到使用'
 const tableRowClassName = ({ row, rowIndex }) => {
-  if (row.checkStatus === 0) {
-    return 'info-row'
-  } else if (row.checkStatus === 2) {
-    return 'danger-row'
-  } else if (row.checkStatus === 3) {
-    return 'warning-row'
+  if (row.change === 1) {
+    return 'add'
+  }
+  else if (row.change === 2) {
+    return 'self'
+  }
+  else if (row.change === 3) {
+    return 'same'
+  }
+  else if (row.change === 4) {
+    return 'not-found'
   }
   return '';
 }
@@ -408,58 +397,6 @@ const cancelUploadConfig = () => {
   filePath.value = ''
 }
 
-// 参数信息
-const paramInfo = ref({
-  id: null,// 参数ID
-  namespace: null,// 命名空间
-  parameterKey: null,// 参数名称
-  valueProd: null,// 生产环境参数值
-  valueReinstall: null,// 回装环境参数值
-  valueFunc: null,//, // 功能环境参数值
-  newValue: null,// 生产环境更新值
-  description: null,// 参数描述
-  type1: null,// 一级分类
-  type2: null,// 二级分类
-  status: null,// 参数状态
-  checkStatus: null,// 确认状态
-  change: null,// 比对状态
-})
-
-// 修改参数信息
-const paramModify = async (row) => {
-  editParamDialogFormVisible.value = true;
-
-  paramInfo.value.id = row.id;
-  paramInfo.value.parameterKey = row.parameterKey;
-  paramInfo.value.valueProd = row.valueProd;
-  paramInfo.value.description = row.description;
-  paramInfo.value.type1 = row.type1;
-  paramInfo.value.type2 = row.type2;
-  paramInfo.value.status = row.status;
-  // paramInfo.value.checkStatus = row.checkStatus;
-}
-
-// 关闭修改参数弹出框
-const closeEditParamForm = () => {
-  editParamDialogFormVisible.value = false
-  // 重置表单数据
-  paramInfo.value = {
-    id: null,// 参数ID
-    namespace: null,// 命名空间
-    parameterKey: null,// 参数名称
-    valueProd: null,// 生产环境参数值
-    valueReinstall: null,// 回装环境参数值
-    valueFunc: null,// 功能环境参数值
-    newValue: null,// 生产环境更新值
-    description: null,// 参数描述
-    type1: null,// 一级分类
-    type2: null,// 二级分类
-    status: null,// 参数状态
-    checkStatus: null,// 确认状态
-    change: null,// 比对状态
-  }
-}
-
 // 确认删除参数信息
 const paramDelete = (row) => {
   ElMessageBox.confirm(
@@ -612,20 +549,20 @@ const { tableData, loading, searchValue, showTable } = toRefs(state)
 
 <style scoped>
 /*标识参数状态*/
-:deep(.el-table .info-row) {
+:deep(.el-table .add) {
   background: #f0f0f080;
 }
 
-:deep(.el-table .warning-row) {
+:deep(.el-table .self) {
   background: #ffdc85;
 }
 
-:deep(.el-table .danger-row) {
+:deep(.el-table .same) {
   background: #ff8888;
 }
 
-:deep(.el-table .success-row) {
-  background: #c5ffa5;
+:deep(.el-table .not-found) {
+  background: #ffc9a5;
 }
 
 .card-header {

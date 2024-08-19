@@ -5,7 +5,10 @@ export function uploadConfig(data) {
     return request({
         url: '/param_info/category/upload',
         method: 'post',
-        data
+        data,
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
     })
 }
 
