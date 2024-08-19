@@ -16,7 +16,7 @@
         </el-form-item>
       </el-col>
 
-      <el-col :span="24" v-if="level == 1">
+      <el-col :span="24" v-if="level == 1 && formType.matchType == 2">
         <el-form-item label="代码地址" prop="codeUrl">
           <el-input v-model="formType.codeUrl" placeholder="请输入代码地址（如：https://gitee.com/xxx/xxx.git）" />
         </el-form-item>
@@ -112,6 +112,12 @@ const rules = reactive<FormRules>({
   ],
   prefix: [
     { required: true, message: '请填写匹配前缀', trigger: 'blur' }
+  ],
+  namespace: [
+    { required: true, message: '请填写命名空间', trigger: 'blur' }
+  ],
+  codeUrl: [
+    { required: true, message: '请填写代码地址', trigger: 'blur' }
   ]
 })
 
@@ -121,6 +127,7 @@ watch(() => level.value, (newValue) => {
     rules.matchType[0].required = true;
     rules.parentId[0].required = false;
     rules.prefix[0].required = false;
+    
   } else if (newValue === 2) {
     rules.matchType[0].required = false;
     rules.parentId[0].required = true;

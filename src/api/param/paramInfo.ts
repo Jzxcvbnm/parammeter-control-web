@@ -18,19 +18,10 @@ export function getParamInfoAll() {
     })
 }
 
-// 查询参数
-export function getParamInfo(data) {
-    return request({
-        url: '/param_info/query',
-        method: 'post',
-        data
-    })
-}
-
 // 新增参数信息
 export function addParamInfo(data) {
     return request({
-        url: '/paramClass/addParamInfo',
+        url: '/param_info/category/save',
         method: 'post',
         data
     })
@@ -39,33 +30,24 @@ export function addParamInfo(data) {
 // 修改参数信息
 export function updateParamInfo(data) {
     return request({
-        url: '/paramClass/updateParamInfo',
-        method: 'post',
+        url: '/param_info/category/update',
+        method: 'put',
         data
     })
 }
 
 // 删除参数信息
-export function deleteParamInfo(data) {
+export function deleteParamInfo(id) {
     return request({
-        url: '/paramClass/deleteParamInfo',
-        method: 'post',
-        data
+        url: `/param_info/category/delete/${id}`,
+        method: 'put',
     })
 }
 
-//获取变量分类
-export function getVarClassify() {
-    return request({
-        url: '/type/category',
-        method: 'get',
-    })
-}    
-
-//保存清单信息
+//批量确认清单信息
 export function saveChecklist(data) {
     return request({
-        url: '/param_info/checklist',
+        url: '/param_info/category/updateBatch',
         method: 'post',
         data
     })

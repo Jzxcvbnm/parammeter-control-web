@@ -23,10 +23,9 @@
                 <el-table-column prop="categoryName" header-align="center" min-width="50" label="类型">
                 </el-table-column>
 
-                <el-table-column prop="namespace" header-align="center" min-width="50" label="命名空间">
+                <el-table-column prop="namespace" header-align="center" align="center" min-width="50" label="命名空间">
                 </el-table-column>
 
-                // 匹配类型
                 <el-table-column prop="matchType" header-align="center" align="center" min-width="50" label="匹配类型">
                     <template #default="scope">
                         <span v-if="scope.row.matchType === 1">前缀匹配</span>

@@ -32,8 +32,8 @@
             </el-col>
 
             <el-col :span="24">
-                <el-form-item label="参数描述" prop="comment">
-                    <el-input v-model="formParam.comment" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }"
+                <el-form-item label="参数描述" prop="description">
+                    <el-input v-model="formParam.description" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }"
                         placeholder="" />
                 </el-form-item>
             </el-col>
@@ -81,17 +81,17 @@ import { getTypeTree } from "../../../api/rule/ruleMaintenance"
 
 // 状态映射
 const statusMap = [
-    { label: '未启用', value: 0 },
-    { label: '生效', value: 1 },
-    { label: '作废', value: 2 },
+    { label: '已启用', value: 0 },
+    { label: '未启用', value: 1 },
+    { label: '已作废', value: 2 },
 ]
 
 // 确认状态映射
 const checkStatusMap = [
     { label: '推荐分类', value: 0 },
     { label: '已确认', value: 1 },
-    { label: '未找到使用', value: 2 },
-    { label: '未找到分类', value: 3 },
+    { label: '未找到分类', value: 2 },
+    { label: '未找到使用', value: 3 },
 ]
 
 const emit = defineEmits(['closeAddParamForm', 'success'])
@@ -105,7 +105,8 @@ const formParam = reactive({
     valueProd: null,// 生产环境参数值
     valueReinstall: null,// 回装环境参数值
     valueFunc: null,// 功能测试参数值
-    comment: null, // 参数描述
+    description: null, // 参数描述
+    type: [], // 参数分类
     type1: null, // 一级分类
     type2: null, // 二级分类
     status: null, // 参数状态
@@ -117,11 +118,20 @@ const rules = reactive<FormRules>({
     parameterKey: [
         { required: true, message: '请输入参数名称', trigger: 'blur' },
     ],
-    type1: [
-        { required: true, message: '请选择一级分类', trigger: 'blur' },
+    namespace: [
+        { required: true, message: '请输入命名空间', trigger: 'blur' },
     ],
-    type2: [
-        { required: true, message: '请选择二级分类', trigger: 'blur' },
+    valueProd: [
+        { required: true, message: '请输入生产环境参数值', trigger: 'blur' },
+    ],
+    valueReinstall: [
+        { required: true, message: '请输入回装环境参数值', trigger: 'blur' },
+    ],
+    valueFunc: [
+        { required: true, message: '请输入功能测试参数值', trigger: 'blur' },
+    ],
+    type: [
+        { required: true, message: '请选择参数分类', trigger: 'blur' },
     ],
     status: [
         { required: true, message: '请选择参数状态', trigger: 'blur' },
@@ -137,7 +147,19 @@ const addParam = async (formEl: FormInstance | undefined) => {
     await formEl.validate(async (valid, fields) => {
         subLoading.value = true
         if (valid) {  // 表单验证通过
-            const { data } = await addParamInfo(formParam)
+            const params = {
+                parameterKey: formParam.parameterKey,
+                namespace: formParam.namespace,
+                valueProd: formParam.valueProd,
+                valueReinstall: formParam.valueReinstall,
+                valueFunc: formParam.valueFunc,
+                description: formParam.description,
+                type1: formParam.type1,
+                type2: formParam.type2,
+                status: formParam.status,
+                // checkStatus: fields.checkStatus,
+            }
+            const { data } = await addParamInfo(params)
             if (data.code === 200) {
                 ElMessage.success(data.msg)
                 emit('success')
@@ -183,6 +205,7 @@ const typeChange = (value) => {
     if (value && value.length === 2) {
         formParam.type1 = value[0];
         formParam.type2 = value[1];
+        formParam.type = [formParam.type1, formParam.type2]
     } else {
         formParam.type1 = '';
         formParam.type2 = '';
