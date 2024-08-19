@@ -43,10 +43,10 @@
         <el-table-column label="二级分类" prop="categoryName" sortable>
         </el-table-column>
 
-        <el-table-column label="参数状态" prop="status" sortable>
+        <el-table-column label="参数状态" prop="compareStatus" sortable>
           <template #default="scope">
-            <el-tag :type="getStatusType(scope.row.status)">
-              {{ statusMap[scope.row.status] }}
+            <el-tag :type="getStatusType(scope.row.compareStatus)">
+              {{ compareStatusMap[scope.row.compareStatus] }}
             </el-tag>
           </template>
         </el-table-column>
@@ -111,7 +111,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作">
+        <el-table-column label="操作" align="center">
           <template #default="scope">
             <el-button size="small" style="margin: 0 0 10px 10px;" @click="paramDelete(scope.row)">删除</el-button>
           </template>
@@ -163,10 +163,9 @@ import { paramCheck, saveComparelist } from '../../api/param/paramCheck';
 
 
 // 状态映射
-const statusMap = {
-  '0': '已启用',
-  '1': '未启用',
-  '2': '已作废'
+const compareStatusMap = {
+  '0': '未确认',
+  '1': '已确认',
 }
 
 // 比对状态
@@ -198,7 +197,7 @@ const state = reactive({
   tableData: [],
   // 当前点击的编辑信息
   // paramInfo: null,
-  // status: null,
+  // compareStatus: null,
   // total: 0, //总条数
   // pageSize: 10, //每页显示行数
   // pageIndex: 1, //当前页码
@@ -256,13 +255,10 @@ const getChangeStatus = (status) => {
 // 标识参数状态
 const getStatusType = (status) => {
   if (status === 0) {
-    return 'success'
+    return 'warning'
   }
   else if (status === 1) {
-    return 'info'
-  }
-  else if (status === 2) {
-    return 'danger'
+    return 'success'
   }
 }
 
@@ -303,7 +299,7 @@ const search = () => {
         regex.test(item.namespace) ||  // 命名空间
         regex.test(item.parentName) ||  // 一级分类
         regex.test(item.categoryName) ||  // 二级分类
-        regex.test(item.status) ||  // 参数状态
+        regex.test(item.compareStatus) ||  // 参数状态
         regex.test(item.checkStatus);  // 确认状态
     })
 
@@ -496,7 +492,7 @@ const column = [
   },
   {
     label: '参数状态',
-    name: 'status',
+    name: 'compareStatus',
   },
   {
     label: '命名空间',

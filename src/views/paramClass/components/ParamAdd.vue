@@ -45,18 +45,18 @@
             </el-col>
 
             <el-col :span="12">
-                <el-form-item label="参数状态" prop="status">
-                    <el-select v-model="formParam.status" placeholder="请选择参数状态">
-                        <el-option v-for="item in statusMap" :key="item.value" :label="item.label"
+                <el-form-item label="参数状态" prop="useStatus">
+                    <el-select v-model="formParam.useStatus" placeholder="请选择参数状态">
+                        <el-option v-for="item in useStatusMap" :key="item.value" :label="item.label"
                             :value="item.value"></el-option>
                     </el-select>
                 </el-form-item>
             </el-col>
 
             <!-- <el-col :span="12">
-                <el-form-item label="确认状态" prop="checkStatus">
-                    <el-select v-model="formParam.checkStatus" placeholder="请选择确认状态">
-                        <el-option v-for="item in checkStatusMap" :key="item.value" :label="item.label"
+                <el-form-item label="确认状态" prop="categoryStatus">
+                    <el-select v-model="formParam.categoryStatus" placeholder="请选择确认状态">
+                        <el-option v-for="item in categoryStatusMap" :key="item.value" :label="item.label"
                             :value="item.value"></el-option>
                     </el-select>
                 </el-form-item>
@@ -80,14 +80,14 @@ import { getTypeTree } from "../../../api/rule/ruleMaintenance"
 
 
 // 状态映射
-const statusMap = [
+const useStatusMap = [
     { label: '已启用', value: 0 },
     { label: '未启用', value: 1 },
     { label: '已作废', value: 2 },
 ]
 
 // 确认状态映射
-const checkStatusMap = [
+const categoryStatusMap = [
     { label: '推荐分类', value: 0 },
     { label: '已确认', value: 1 },
     { label: '未找到分类', value: 2 },
@@ -109,8 +109,8 @@ const formParam = reactive({
     type: [], // 参数分类
     type1: null, // 一级分类
     type2: null, // 二级分类
-    status: null, // 参数状态
-    // checkStatus: null,// 确认状态
+    useStatus: null, // 参数状态
+    // categoryStatus: null,// 确认状态
 })
 
 // 定义表单约束规则对象
@@ -133,10 +133,10 @@ const rules = reactive<FormRules>({
     type: [
         { required: true, message: '请选择参数分类', trigger: 'blur' },
     ],
-    status: [
+    useStatus: [
         { required: true, message: '请选择参数状态', trigger: 'blur' },
     ],
-    checkStatus: [
+    categoryStatus: [
         { required: true, message: '请选择确认状态', trigger: 'blur' },
     ]
 })
@@ -156,8 +156,8 @@ const addParam = async (formEl: FormInstance | undefined) => {
                 description: formParam.description,
                 type1: formParam.type1,
                 type2: formParam.type2,
-                status: formParam.status,
-                // checkStatus: fields.checkStatus,
+                useStatus: formParam.useStatus,
+                // categoryStatus: fields.categoryStatus,
             }
             const { data } = await addParamInfo(params)
             if (data.code === 200) {

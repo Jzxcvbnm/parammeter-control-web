@@ -45,10 +45,10 @@
         <el-table-column label="二级分类" prop="categoryName" sortable>
         </el-table-column>
 
-        <el-table-column label="参数状态" prop="status" sortable>
+        <el-table-column label="参数状态" prop="useStatus" sortable>
           <template #default="scope">
-            <el-tag :type="getStatusType(scope.row.status)">
-              {{ statusMap[scope.row.status] }}
+            <el-tag :type="getStatusType(scope.row.useStatus)">
+              {{ useStatusMap[scope.row.useStatus] }}
             </el-tag>
           </template>
         </el-table-column>
@@ -73,10 +73,10 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="确认状态" prop="checkStatus" sortable>
+        <el-table-column label="确认状态" prop="categoryStatus" sortable>
           <template #default="scope">
-            <el-tag :type="getCheckStatus(scope.row.checkStatus)">
-              {{ checkStatusMap[scope.row.checkStatus] }}
+            <el-tag :type="getCheckStatus(scope.row.categoryStatus)">
+              {{ categoryStatusMap[scope.row.categoryStatus] }}
             </el-tag>
           </template>
         </el-table-column>
@@ -172,14 +172,14 @@ import ParamAdd from './components/ParamAdd.vue'
 
 
 // 状态映射
-const statusMap = {
+const useStatusMap = {
   '0': '已启用',
   '1': '未启用',
   '2': '已作废'
 }
 
 // 确认状态映射
-const checkStatusMap = {
+const categoryStatusMap = {
   0: '推荐分类',
   1: '已确认',
   2: '未找到分类',
@@ -211,7 +211,7 @@ const state = reactive({
   tableData: [],
   // 当前点击的编辑信息
   // paramInfo: null,
-  // status: null,
+  // useStatus: null,
   // total: 0, //总条数
   // pageSize: 10, //每页显示行数
   // pageIndex: 1, //当前页码
@@ -249,11 +249,11 @@ const loadData = async (state: any) => {
 //   2: '未找到分类',
 //   3: '未找到使用',
 const tableRowClassName = ({ row, rowIndex }) => {
-  if (row.checkStatus === 0) {
+  if (row.categoryStatus === 0) {
     return 'info-row'
-  } else if (row.checkStatus === 2) {
+  } else if (row.categoryStatus === 2) {
     return 'danger-row'
-  } else if (row.checkStatus === 3) {
+  } else if (row.categoryStatus === 3) {
     return 'warning-row'
   }
   return '';
@@ -324,8 +324,8 @@ const search = () => {
         regex.test(item.namespace) ||  // 命名空间
         regex.test(item.parentName) ||  // 一级分类
         regex.test(item.categoryName) ||  // 二级分类
-        regex.test(item.status) ||  // 参数状态
-        regex.test(item.checkStatus);  // 确认状态
+        regex.test(item.useStatus) ||  // 参数状态
+        regex.test(item.categoryStatus);  // 确认状态
     })
 
     state.tableData = searchData;
@@ -431,8 +431,8 @@ const paramInfo = ref({
   description: null,// 参数描述
   type1: null,// 一级分类
   type2: null,// 二级分类
-  status: null,// 参数状态
-  checkStatus: null,// 确认状态
+  useStatus: null,// 参数状态
+  categoryStatus: null,// 确认状态
 })
 
 // 修改参数信息
@@ -447,8 +447,8 @@ const paramModify = async (row) => {
   paramInfo.value.description = row.description;
   paramInfo.value.type1 = row.type1;
   paramInfo.value.type2 = row.type2;
-  paramInfo.value.status = row.status;
-  // paramInfo.value.checkStatus = row.checkStatus;
+  paramInfo.value.useStatus = row.useStatus;
+  // paramInfo.value.categoryStatus = row.categoryStatus;
 }
 
 // 关闭修改参数弹出框
@@ -465,8 +465,8 @@ const closeEditParamForm = () => {
     description: null,// 参数描述
     type1: null,// 一级分类
     type2: null,// 二级分类
-    status: null,// 参数状态
-    checkStatus: null,// 确认状态
+    useStatus: null,// 参数状态
+    categoryStatus: null,// 确认状态
   }
 }
 
@@ -489,8 +489,8 @@ const closeAddParamForm = () => {
     description: null,// 参数描述
     type1: null,// 一级分类
     type2: null,// 二级分类
-    status: null,// 参数状态
-    checkStatus: null,// 确认状态
+    useStatus: null,// 参数状态
+    categoryStatus: null,// 确认状态
   }
 }
 
@@ -592,7 +592,7 @@ const column = [
   },
   {
     label: '参数状态',
-    name: 'status',
+    name: 'useStatus',
   },
   {
     label: '命名空间',
@@ -608,7 +608,7 @@ const column = [
   },
   {
     label: '确认状态',
-    name: 'checkStatus',
+    name: 'categoryStatus',
   },
 ]
 // 导出excel
