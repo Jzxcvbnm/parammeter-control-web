@@ -15,7 +15,7 @@ export function paramCheck(data: any) {
 // 批量确认比对信息
 export function saveComparelist(data: any) {
     return request({
-        url: '/param_info/compare/confirm',
+        url: '/param_info/compare/updateBatch',
         method: 'post',
         data
     })

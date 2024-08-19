@@ -210,7 +210,9 @@ const loadData = async (data) => {
   state.loading = true
   // 先清空数据
   state.tableData = []
-  state.tableData = data.data
+  if (data.data) {
+    state.tableData = data.data
+  }
   state.loading = false
   state.showTable = true
 }
@@ -300,7 +302,7 @@ const search = () => {
         regex.test(item.parentName) ||  // 一级分类
         regex.test(item.categoryName) ||  // 二级分类
         regex.test(item.compareStatus) ||  // 参数状态
-        regex.test(item.checkStatus);  // 确认状态
+        regex.test(item.change);  // 确认状态
     })
 
     state.tableData = searchData;
@@ -315,12 +317,6 @@ const resetSearch = () => {
   // state.pageSize = 10 //每页显示行数
   // state.pageIndex = 1 //当前页码
   loadData(state)
-}
-
-// 提交表单回调函数
-const success = () => {
-  loadData(state);
-  editParamDialogFormVisible.value = false
 }
 
 // 上传配置文件
@@ -465,6 +461,7 @@ const batchConfirm = () => {
           message: '批量确认成功!',
         })
         loadData(state) // 确认成功后重新查询
+
       } else {
         ElMessage({
           type: 'error',
@@ -519,8 +516,8 @@ const column = [
     name: 'description',
   },
   {
-    label: '确认标志',
-    name: 'checkStatus',
+    label: '比对状态',
+    name: 'change',
   },
 ]
 
