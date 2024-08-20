@@ -15,6 +15,54 @@ export const autoWidthAction = (val, width = 10) => {
 // 导出普通Excel
 export const exportExcel = async ({ column, data, filename, autoWidth, format }) => {
     console.log('data----------:', data);
+    // 状态映射
+    const useStatusMap = {
+        0: '已启用',
+        1: '未启用',
+        2: '已作废'
+    }
+
+    // 确认状态映射
+    const categoryStatusMap = {
+        0: '推荐分类',
+        1: '已确认',
+        2: '未找到分类',
+        3: '未找到使用',
+    }
+
+    // 状态映射
+    const compareStatusMap = {
+        0: '未确认',
+        1: '已确认',
+    }
+
+    // 比对状态
+    const changeMap = {
+        0: '正常',
+        1: '新增',
+        2: '自身有变更',
+        3: '同类有变更',
+        4: '未找到使用'
+    }
+
+    // 预处理数据，将需要映射的字段值替换为对应的映射值
+    const processedData = data.map(item => {
+        const newItem = { ...item };
+        if (newItem.useStatus !== undefined && useStatusMap[newItem.useStatus] !== undefined) {
+            newItem.useStatus = useStatusMap[newItem.useStatus];
+        }
+        if (newItem.categoryStatus !== undefined && categoryStatusMap[newItem.categoryStatus] !== undefined) {
+            newItem.categoryStatus = categoryStatusMap[newItem.categoryStatus];
+        }
+        if (newItem.compareStatus !== undefined && compareStatusMap[newItem.compareStatus] !== undefined) {
+            newItem.compareStatus = compareStatusMap[newItem.compareStatus];
+        }
+        if (newItem.change !== undefined && changeMap[newItem.change] !== undefined) {
+            newItem.change = changeMap[newItem.change];
+        }
+        return newItem;
+    });
+
     // 创建excel工作簿
     const workbook = new ExcelJS.Workbook();
     // 设置工作簿属性
@@ -38,7 +86,7 @@ export const exportExcel = async ({ column, data, filename, autoWidth, format })
         };
         if (autoWidth) {
             const maxArr = [autoWidthAction(item.label)];
-            data.forEach(ite => {
+            processedData.forEach(ite => {
                 const str = ite[item.name] || '';
                 if (str) {
                     maxArr.push(autoWidthAction(str));
@@ -51,7 +99,7 @@ export const exportExcel = async ({ column, data, filename, autoWidth, format })
     });
     worksheet.columns = columnsName;
     // 添加行
-    worksheet.addRows(data);
+    worksheet.addRows(processedData);
     // 写入文件
     const uint8Array =
         format === "xlsx"

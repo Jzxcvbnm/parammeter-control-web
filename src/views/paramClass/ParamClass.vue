@@ -5,7 +5,7 @@
       <div class="card-header">
         <div class="card-search">
           <el-row :gutter="10">
-            <el-col span="6">
+            <el-col :span="24">
               <el-button type="primary" @click="uploadFile" color="#00B890">上传配置</el-button>
             </el-col>
           </el-row>
@@ -16,19 +16,59 @@
     <!--表格区域 start-->
     <div class="table-box" v-if="showTable">
       <!-- <div class="table-box"> -->
-      <el-row :gutter="10">
-        <el-col :span="12" style="margin-bottom: 5px;">
-          <el-input :prefix-icon="Search" v-model="searchValue" @keyup.enter="validateAndSearch"
-            placeholder="查询参数（支持模糊查询）" style="width: 213px;" />
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="一级分类">
+            <el-input v-model="parentName" placeholder="请输入一级分类"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="二级分类">
+            <el-input v-model="categoryName" placeholder="请输入二级分类"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="参数状态">
+            <el-select v-model="useStatus" placeholder="请选择参数状态">
+              <el-option label="已启用" value="0"></el-option>
+              <el-option label="未启用" value="1"></el-option>
+              <el-option label="已作废" value="2"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
 
-          <el-button type="primary" @click="validateAndSearch" color="#00B890">查询</el-button>
-          <el-button type="primary" @click="resetSearch" color="#00B890">重置</el-button>
-          <el-button type="primary" @click="paramAdd" color="#00B890">添加参数</el-button>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="命名空间">
+            <el-input v-model="namespace" placeholder="请输入命名空间"></el-input>
+          </el-form-item>
         </el-col>
 
+        <el-col :span="8">
+          <el-form-item label="参数名称">
+            <el-input v-model="parameterKey" placeholder="请输入参数名称"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="10">
+        <!-- <el-col :span="12" style="margin-bottom: 5px;">
+          <el-input :prefix-icon="Search" v-model="searchValue" @keyup.enter="validateAndSearch"
+            placeholder="查询参数（支持模糊查询）" style="width: 213px;" />
+          <el-button type="primary" @click="validateAndSearch" color="#00B890">查询</el-button>
+        </el-col> -->
+        <el-col :span="12" style="margin-bottom: 5px;">
+          <el-button type="primary" @click="search" color="#00B890">查询</el-button>
+          <el-button type="primary" @click="resetSearch" color="#00B890">重置</el-button>
+        </el-col>
         <el-col :span="12" style="margin-bottom: 5px; text-align: right;">
+          <el-button type="primary" @click="paramAdd" color="#00B890" style="width: 125px;">添加参数</el-button>
           <el-button type="primary" @click="batchConfirm" color="#00B890" style="width: 125px;">批量确认</el-button>
-          <el-button type="primary" @click="exportExcelData" color="#00B890" style="width: 125px;">导出excel文件</el-button>
+          <el-button type="primary" @click="exportExcelData1" color="#00B890"
+            style="width: 125px;">导出分类信息excel</el-button>
+          <el-button type="primary" @click="exportExcelData2" color="#00B890"
+            style="width: 125px;">导出参数信息excel</el-button>
         </el-col>
       </el-row>
       <el-table element-loading-text="数据加载中..." v-loading="loading" :data="tableData"
@@ -94,7 +134,7 @@
   </el-card>
 
   <!-- 上传配置弹出框 start-->
-  <el-dialog title="上传配置文件" v-model="uploadDialogVisible" width="25%" destroy-on-close
+  <el-dialog title="上传配置文件" v-model="uploadDialogVisible" width="30%" destroy-on-close
     :before-close="cancelUploadConfig">
     <el-form>
       <el-form-item label="文件路径">
@@ -173,9 +213,9 @@ import ParamAdd from './components/ParamAdd.vue'
 
 // 状态映射
 const useStatusMap = {
-  '0': '已启用',
-  '1': '未启用',
-  '2': '已作废'
+  0: '已启用',
+  1: '未启用',
+  2: '已作废',
 }
 
 // 确认状态映射
@@ -206,9 +246,16 @@ const selectedFile = ref(null)
 
 const state = reactive({
   // 搜索表单内容
-  searchValue: '',
+  searchValue: null,
+  parentName: null,
+  categoryName: null,
+  useStatus: null,
+  namespace: null,
+  parameterKey: null,
   // 表格全部信息
   tableData: [],
+  // 临时表格
+  tempTableData: [],
   // 当前点击的编辑信息
   // paramInfo: null,
   // useStatus: null,
@@ -224,6 +271,7 @@ const loadData = async (state: any) => {
   state.loading = true
   // 先清空数据
   state.tableData = []
+  state.tempTableData = []
 
   const { data } = await getParamInfoAll()
   if (data.code !== 200) {
@@ -237,6 +285,7 @@ const loadData = async (state: any) => {
       message: '数据加载成功',
     })
     state.tableData = data.data
+    state.tempTableData = data.data
     state.loading = false
     state.showTable = true
   }
@@ -288,53 +337,87 @@ const getStatusType = (status) => {
 }
 
 // 验证参数并进行搜索
-const validateAndSearch = () => {
-  const variableNameRegex = /^[a-zA-Z0-9_.\u4e00-\u9fa5]{1,150}$/
+// const validateAndSearch = () => {
+//   const variableNameRegex = /^[a-zA-Z0-9_.\u4e00-\u9fa5]{1,150}$/
 
-  if (state.searchValue === '') {
-    ElMessage({
-      type: 'error',
-      message: '请输入参数名称',
-    })
-  } else if (!variableNameRegex.test(state.searchValue) && state.searchValue !== '') {
-    ElMessage({
-      type: 'error',
-      message: '参数名称不合法！（仅限字母、数字、小数点、下划线和中文字符，长度不超过150个字符）',
-    })
-  } else {
-    search()
-  }
-}
+//   if (state.searchValue === '') {
+//     ElMessage({
+//       type: 'error',
+//       message: '请输入参数名称',
+//     })
+//   } else if (!variableNameRegex.test(state.searchValue) && state.searchValue !== '') {
+//     ElMessage({
+//       type: 'error',
+//       message: '参数名称不合法！（仅限字母、数字、小数点、下划线和中文字符，长度不超过150个字符）',
+//     })
+//   } else {
+//     search()
+//   }
+// }
 
 
 // 搜索
 const search = () => {
-  if (state.searchValue !== null) {
+  // if (state.searchValue !== null) {
+  //   ElMessage({
+  //     type: 'info',
+  //     message: `参数: ${state.searchValue} 搜索内容如下`,
+  //   })
+
+  //   // 创建忽略大小写的正则表达式
+  //   const regex = new RegExp(state.searchValue, 'i');
+
+  //   // 使用正则表达式进行多字段查询
+  //   const searchData = state.tableData.filter(item => {
+  //     return regex.test(item.parameterKey) ||  // 参数名称
+  //       regex.test(item.namespace) ||  // 命名空间
+  //       regex.test(item.parentName) ||  // 一级分类
+  //       regex.test(item.categoryName) ||  // 二级分类
+  //       regex.test(item.useStatus) ||  // 参数状态
+  //       regex.test(item.categoryStatus);  // 确认状态
+  //   })
+
+  //   state.tableData = searchData;
+  // }
+
+  // 使用完整表格查询
+  state.tableData = state.tempTableData
+
+  if (state.parentName !== null || state.categoryName !== null || state.useStatus !== null || state.namespace !== null || state.parameterKey !== null) {
+
     ElMessage({
       type: 'info',
-      message: `参数: ${state.searchValue} 搜索内容如下`,
+      message: '查询成功',
     })
 
-    // 创建忽略大小写的正则表达式
-    const regex = new RegExp(state.searchValue, 'i');
-
-    // 使用正则表达式进行多字段查询
+    // 根据输入条件过滤数据
     const searchData = state.tableData.filter(item => {
-      return regex.test(item.parameterKey) ||  // 参数名称
-        regex.test(item.namespace) ||  // 命名空间
-        regex.test(item.parentName) ||  // 一级分类
-        regex.test(item.categoryName) ||  // 二级分类
-        regex.test(item.useStatus) ||  // 参数状态
-        regex.test(item.categoryStatus);  // 确认状态
+      return (state.parentName === null || item.parentName.includes(state.parentName)) &&
+        (state.categoryName === null || item.categoryName.includes(state.categoryName)) &&
+        (state.useStatus === null || item.useStatus.toString() === state.useStatus.toString()) &&
+        (state.namespace === null || item.namespace.includes(state.namespace)) &&
+        (state.parameterKey === null || item.parameterKey.includes(state.parameterKey))
     })
 
     state.tableData = searchData;
   }
+  else {
+    ElMessage({
+      type: 'info',
+      message: `请输入搜索内容`,
+    })
+  }
+
 }
 
 // 重置搜索
 const resetSearch = () => {
-  state.searchValue = ""
+  // state.searchValue = ""
+  state.parentName = null
+  state.categoryName = null
+  state.useStatus = null
+  state.namespace = null
+  state.parameterKey = null
   state.showTable = false
   state.tableData = []
   // state.pageSize = 10 //每页显示行数
@@ -580,8 +663,8 @@ const batchConfirm = () => {
   }
 }
 
-// 导出列表
-const column = [
+// 分类信息表格
+const column1 = [
   {
     label: '一级分类',
     name: 'parentName',
@@ -599,11 +682,11 @@ const column = [
     name: 'namespace',
   },
   {
-    label: '参数名称',
+    label: '参数变量名',
     name: 'parameterKey',
   },
   {
-    label: '参数描述',
+    label: '变量描述',
     name: 'description',
   },
   {
@@ -611,12 +694,53 @@ const column = [
     name: 'categoryStatus',
   },
 ]
-// 导出excel
-const exportExcelData = () => {
+
+// 参数信息表格
+const column2 = [
+  {
+    label: '命名空间',
+    name: 'namespace',
+  },
+  {
+    label: '参数变量名',
+    name: 'parameterKey',
+  },
+  {
+    label: '参数值(功能环境)',
+    name: 'valueFunc',
+  },
+  {
+    label: '参数值(回装环境)',
+    name: 'valueReinstall',
+  },
+  {
+    label: '参数值(生产环境)',
+    name: 'valueProd',
+  },
+
+  {
+    label: '变量描述',
+    name: 'description',
+  },
+]
+
+// 导出分类信息excel
+const exportExcelData1 = () => {
   exportExcel({
-    column,
+    column: column1,
     data: state.tableData,
     filename: '参数分类信息',
+    format: 'xlsx',
+    autoWidth: true,
+  })
+}
+
+// 导出参数信息excel
+const exportExcelData2 = () => {
+  exportExcel({
+    column: column2,
+    data: state.tableData,
+    filename: '参数信息',
     format: 'xlsx',
     autoWidth: true,
   })
@@ -627,7 +751,7 @@ onMounted(() => {
   loadData(state)
 })
 
-const { tableData, loading, searchValue, showTable } = toRefs(state)
+const { tableData, loading, searchValue, parentName, categoryName, useStatus, namespace, parameterKey, showTable } = toRefs(state)
 </script>
 
 <style scoped>
