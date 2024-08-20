@@ -52,7 +52,7 @@
                         <el-button v-if="scope.row.parentId == 0" type="text" size="small"
                             @click="addHandle(2, scope.row)" :disabled="scope.row.id == 1">新增</el-button>
                         <el-button type="text" size="small" @click="UpdateHandle(scope.row)"
-                            :disabled="scope.row.id == 1">修改</el-button>
+                            :disabled="(scope.row.id == 1)||((scope.row.matchType === 2)&&(scope.row.parentId !== 0))">修改</el-button>
                         <el-button type="text" size="small" @click="deleteHandle(scope.row)"
                             :disabled="(scope.row.children && scope.row.children.length > 0) || (scope.row.id == 1)">删除</el-button>
                     </template>
