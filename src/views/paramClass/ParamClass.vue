@@ -68,7 +68,7 @@
           <el-button type="primary" @click="exportExcelData1" color="#00B890"
             style="width: 125px;">导出分类信息excel</el-button>
           <el-button type="primary" @click="exportExcelData2" color="#00B890"
-            style="width: 125px;">导出参数信息excel</el-button>
+            style="width: 125px;">导出参数配置excel</el-button>
         </el-col>
       </el-row>
       <el-table element-loading-text="数据加载中..." v-loading="loading" :data="tableData"
@@ -740,7 +740,7 @@ const exportExcelData2 = () => {
   exportExcel({
     column: column2,
     data: state.tableData,
-    filename: '参数信息',
+    filename: '参数配置信息',
     format: 'xlsx',
     autoWidth: true,
   })
