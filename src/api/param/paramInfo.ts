@@ -55,3 +55,21 @@ export function saveChecklist(data) {
         data
     })
 }
+
+// 批量启用参数信息
+export function enableChecklist(data) {
+    return request({
+        url: '/param_info/compare/confirmBatch',
+        method: 'post',
+        data
+    })
+}
+
+// 批量删除参数信息
+export function deleteChecklist(data) {
+    return request({
+        url: '/param_info/category/deleteBatch',
+        method: 'delete',
+        data
+    })
+}

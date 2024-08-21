@@ -60,7 +60,8 @@
           <el-button type="primary" @click="resetSearch" color="#00B890">重置</el-button>
         </el-col>
         <el-col :span="12" style="margin-bottom: 5px; text-align: right;">
-          <el-button type="primary" @click="batchConfirm" color="#00B890" style="width: 125px;">批量保存</el-button>
+          <el-button type="primary" @click="batchConfirm" color="#00B890" style="width: 125px;">批量确认</el-button>
+          <el-button type="primary" @click="batchDelete" color="#00B890" style="width: 125px;">批量删除</el-button>
           <el-button type="primary" @click="exportExcelData1" color="#00B890"
             style="width: 125px;">导出比对信息excel</el-button>
           <el-button type="primary" @click="exportExcelData2" color="#00B890"
@@ -196,7 +197,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, toRefs, ref } from 'vue'
 import { Search } from '@element-plus/icons-vue'
-import { ElMessage, ElNotification, ElMessageBox } from 'element-plus'
+import { ElMessage, ElNotification, ElMessageBox, ElLoading } from 'element-plus'
 import { exportExcel } from "../../utils/exprotExcel"
 import { paramCheck, saveComparelist } from '../../api/param/paramCheck';
 
@@ -331,28 +332,6 @@ const getStatusType = (status) => {
 
 // 搜索
 const search = () => {
-  // if (state.searchValue !== null) {
-  //   ElMessage({
-  //     type: 'info',
-  //     message: `参数: ${state.searchValue} 搜索内容如下`,
-  //   })
-
-  //   // 创建忽略大小写的正则表达式
-  //   const regex = new RegExp(state.searchValue, 'i');
-
-  //   // 使用正则表达式进行多字段查询
-  //   const searchData = state.tableData.filter(item => {
-  //     return regex.test(item.parameterKey) ||  // 参数名称
-  //       regex.test(item.namespace) ||  // 命名空间
-  //       regex.test(item.parentName) ||  // 一级分类
-  //       regex.test(item.categoryName) ||  // 二级分类
-  //       regex.test(item.compareStatus) ||  // 参数状态
-  //       regex.test(item.categoryStatus);  // 确认状态
-  //   })
-
-  //   state.tableData = searchData;
-  // }
-
   // 使用完整表格查询
   state.tableData = state.tempTableData
 
@@ -426,9 +405,16 @@ const confirmUpload = async () => {
   const formData = new FormData()
   formData.append('file', selectedFile.value)
 
+  // 显示加载状态
+  const loadingInstance = ElLoading.service({
+    lock: true,
+    text: '上传中...',
+    background: 'rgba(0, 0, 0, 0.7)',
+  })
+
   try {
     const response = await paramCheck(formData)
-    uploadDialogVisible.value = false
+
 
     // selectedFile.value = null
     filePath.value = ''
@@ -437,26 +423,28 @@ const confirmUpload = async () => {
         type: 'success',
         message: '文件上传成功',
       })
+      uploadDialogVisible.value = false
       loadData(response.data) // 上传成功后重新查询
     }
     else {
       ElMessage({
         type: 'error',
         message: response.data.msg,
-
       })
+      filePath.value = ''
+      uploadDialogVisible.value = false
     }
 
   } catch (error) {
     console.error('文件上传失败', error)
     uploadDialogVisible.value = false
-    // selectedFile.value = null
     filePath.value = ''
-
     ElMessage({
       type: 'error',
       message: '文件上传失败',
     })
+  } finally {
+    loadingInstance.close()
   }
 }
 
@@ -567,6 +555,57 @@ const batchConfirm = () => {
   }
 }
 
+// 批量删除
+const batchDelete = () => {
+  if (multipleSelection.length === 0) {
+    ElMessage({
+      type: 'error',
+      message: '请选择需要删除的参数',
+    })
+  }
+
+  else {
+    ElMessageBox.confirm(
+      '此操作将删除所选参数, 是否继续?',
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    ).then(() => {
+      // 直接在tableData中删除对应的行
+      for (let i = 0; i < multipleSelection.length; i++) {
+        const index = state.tableData.findIndex(item => item.id === multipleSelection[i].id);
+        if (index !== -1) {
+          state.tableData.splice(index, 1);
+        }
+      }
+
+      // 清空多选框
+      multipleTable.value.clearSelection();
+
+      // 更新tempTableData
+      for (let i = 0; i < multipleSelection.length; i++) {
+        const index = state.tempTableData.findIndex(item => item.id === multipleSelection[i].id);
+        if (index !== -1) {
+          state.tempTableData.splice(index, 1);
+        }
+      }
+
+      ElMessage({
+        type: 'success',
+        message: '批量删除成功!',
+      })
+    }).catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '已取消删除',
+      })
+    })
+  }
+}
+
 // 单条确认
 const singleComfirm = (row) => {
   if (row === null) {
@@ -597,6 +636,8 @@ const singleComfirm = (row) => {
 
         // 修改对应行的参数状态
         state.tableData[state.tableData.findIndex(item => item.id === row.id)].compareStatus = 1;
+        // 修改对应行的生产环境
+        state.tableData[state.tableData.findIndex(item => item.id === row.id)].valueProd = row.newValue;
 
         // 清空该行的多选框
         // multipleTable.value.clearSelection();
