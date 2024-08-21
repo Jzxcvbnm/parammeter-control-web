@@ -11,9 +11,25 @@
                 </el-form-item>
             </el-col>
 
+            <el-col :span="24" v-if="formType.level == 2">
+                <el-form-item label="上级分类" prop="parentId">
+                    <el-select v-model="formType.parentId" :disabled="isAddInFirstLevel" placeholder="请选择上级分类"
+                        @change="handleParentChange">
+                        <el-option v-for="item in TypeOptions" :key="item.id" :label="item.categoryName"
+                            :value="item.id"></el-option>
+                    </el-select>
+                </el-form-item>
+            </el-col>
+
             <el-col :span="24">
                 <el-form-item label="类型名称" prop="categoryName">
                     <el-input v-model="formType.categoryName" placeholder="请输入类型名称" />
+                </el-form-item>
+            </el-col>
+
+            <el-col :span="24" v-if="formType.level == 1">
+                <el-form-item label="命名空间" prop="namespace">
+                    <el-input v-model="formType.namespace" placeholder="请输入命名空间" />
                 </el-form-item>
             </el-col>
 
@@ -26,25 +42,9 @@
                 </el-form-item>
             </el-col>
 
-            <el-col :span="24" v-if="formType.level == 1">
-                <el-form-item label="命名空间" prop="namespace">
-                    <el-input v-model="formType.namespace" placeholder="请输入命名空间" />
-                </el-form-item>
-            </el-col>
-
-            <el-col :span="24" v-if="formType.level == 1">
+            <el-col :span="24" v-if="(formType.level == 1) && (formType.matchType == 2)">
                 <el-form-item label="代码地址" prop="codeUrl">
                     <el-input v-model="formType.codeUrl" placeholder="请输入代码地址（如：https://gitee.com/xxx/xxx.git）" />
-                </el-form-item>
-            </el-col>
-
-            <el-col :span="24" v-if="formType.level == 2">
-                <el-form-item label="上级分类" prop="parentId">
-                    <el-select v-model="formType.parentId" :disabled="isAddInFirstLevel" placeholder="请选择上级分类"
-                        @change="handleParentChange">
-                        <el-option v-for="item in TypeOptions" :key="item.id" :label="item.categoryName"
-                            :value="item.id"></el-option>
-                    </el-select>
                 </el-form-item>
             </el-col>
 
@@ -112,7 +112,7 @@ const rules = reactive<FormRules>({
         { required: (form) => form.level === 1, message: '请输入命名空间', trigger: 'blur' },
     ],
     codeUrl: [
-        { required: (form) => form.level === 1, message: '请输入代码地址', trigger: 'blur' },
+        { required: (form) => (form.level === 1) && (form.matchType === 2), message: '请输入代码地址', trigger: 'blur' },
     ],
     parentId: [
         { required: (form) => form.level === 2, message: '请选择上级分类', trigger: 'blur' },

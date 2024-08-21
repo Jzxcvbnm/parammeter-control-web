@@ -129,6 +129,17 @@ const success = () => {
     editTypeDialogFormVisible.value = false
     addTypeDialogFormVisible.value = false
     isAddInFirstLevel.value = false
+    // 重置表单数据
+    typeInfo.value = {
+        level: null,// 分类级别
+        id: null,// 分类ID
+        parentId: null,// 上级分类ID
+        categoryName: null,// 分类名称
+        prefix: null,// 分类前缀
+        matchType: null,// 匹配类型
+        namespace: null,// 命名空间
+        codeUrl: null,// 代码地址
+    }
 }
 
 // 获取数据列表
