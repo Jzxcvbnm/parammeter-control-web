@@ -534,6 +534,15 @@ const batchConfirm = () => {
           }
         }
 
+        // 修改对应行的生产环境
+        // state.tableData[state.tableData.findIndex(item => item.id === row.id)].valueProd = row.newValue;
+        for (let i = 0; i < multipleSelection.length; i++) {
+          const index = state.tableData.findIndex(item => item.id === multipleSelection[i].id);
+          if (index !== -1) {
+            state.tableData[index].valueProd = multipleSelection[i].newValue;
+          }
+        }
+
         // 清空多选框
         multipleTable.value.clearSelection();
 
