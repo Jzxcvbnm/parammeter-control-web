@@ -640,7 +640,7 @@ const singleComfirm = (row) => {
       if (data.code === 200) {
         ElMessage({
           type: 'success',
-          message: '批量确认成功!',
+          message: '确认成功!',
         })
 
         // 修改对应行的参数状态

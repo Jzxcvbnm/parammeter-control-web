@@ -198,9 +198,12 @@ const typeChange = (value) => {
   if (value && value.length === 2) {
     formParam.type1 = value[0];
     formParam.type2 = value[1];
-  } else {
-    formParam.type1 = '';
-    formParam.type2 = '';
+  } else if (value && value.length === 1) {
+    formParam.type1 = value[0];
+    formParam.type2 = null;
+  }else{
+    formParam.type1 = null;
+    formParam.type2 = null;
   }
 }
 
