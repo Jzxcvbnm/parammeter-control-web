@@ -18,27 +18,6 @@
       <!-- <div class="table-box"> -->
       <el-row :gutter="20">
         <el-col :span="8">
-          <el-form-item label="一级分类">
-            <el-input v-model="parentName" placeholder="请输入一级分类"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="二级分类">
-            <el-input v-model="categoryName" placeholder="请输入二级分类"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="参数状态">
-            <el-select v-model="compareStatus" placeholder="请选择参数状态">
-              <el-option label="未确认" value="0"></el-option>
-              <el-option label="已确认" value="1"></el-option>
-            </el-select>
-          </el-form-item>
-        </el-col>
-      </el-row>
-
-      <el-row :gutter="20">
-        <el-col :span="8">
           <el-form-item label="命名空间">
             <el-input v-model="namespace" placeholder="请输入命名空间"></el-input>
           </el-form-item>
@@ -60,10 +39,6 @@
           <el-button type="primary" @click="resetSearch" color="#00B890">重置</el-button>
         </el-col>
         <el-col :span="12" style="margin-bottom: 5px; text-align: right;">
-          <el-button type="primary" @click="batchConfirm" color="#00B890" style="width: 125px;">批量确认</el-button>
-          <el-button type="primary" @click="batchDelete" color="#00B890" style="width: 125px;">批量删除</el-button>
-          <el-button type="primary" @click="exportExcelData1" color="#00B890"
-            style="width: 125px;">导出比对信息excel</el-button>
           <el-button type="primary" @click="exportExcelData2" color="#00B890"
             style="width: 125px;">导出版本变量excel</el-button>
         </el-col>
@@ -74,88 +49,18 @@
         :cell-style="{ textAlign: 'center' }"
         :header-cell-style="{ fontSize: '12px', background: '#484848', color: 'white', textAlign: 'center' }">
 
-        <el-table-column type="selection" width="50" align="center" fixed></el-table-column>
-
-        <el-table-column label="一级分类" prop="parentName" sortable>
-        </el-table-column>
-
-        <el-table-column label="二级分类" prop="categoryName" sortable>
-        </el-table-column>
-
-        <!-- <el-table-column label="参数状态" prop="compareStatus" sortable>
-          <template #default="scope">
-            <el-tag :type="getStatusType(scope.row.compareStatus)">
-              {{ compareStatusMap[scope.row.compareStatus] }}
-            </el-tag>
-          </template>
-        </el-table-column> -->
-
-
         <el-table-column label="命名空间" prop="namespace" sortable>
         </el-table-column>
 
         <el-table-column label="参数名称" prop="parameterKey">
-          <template #default="scope">
-            <el-tooltip :content="scope.row.parameterKey" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.parameterKey }}</span>
-            </el-tooltip>
-          </template>
         </el-table-column>
 
-        <el-table-column label="功能环境" prop="valueFunc">
-          <template #default="scope">
-            <el-tooltip :content="scope.row.valueFunc" placement="top" effect="light">
-              <span class="highlight ellipsis">{{ scope.row.valueFunc }}</span>
-            </el-tooltip>
-          </template>
+        <el-table-column label="参数描述" prop="comment" sortable>
         </el-table-column>
 
-        <el-table-column label="回装环境" prop="valueReinstall">
-          <template #default="scope">
-            <el-tooltip :content="scope.row.valueReinstall" placement="top" effect="light">
-              <span class="highlight ellipsis">{{ scope.row.valueReinstall }}</span>
-            </el-tooltip>
-          </template>
+        <el-table-column label="参数状态" prop="status" sortable>
         </el-table-column>
 
-        <el-table-column label="生产环境" prop="valueProd">
-          <template #default="scope">
-            <el-tooltip :content="scope.row.valueProd" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.valueProd }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="生产更新">
-          <template #default="scope">
-            <el-tooltip :content="scope.row.newValue" placement="top" effect="light">
-              <el-input v-model="scope.row.newValue" placeholder=""></el-input>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="参数描述" prop="description">
-          <template #default="scope">
-            <el-tooltip :content="scope.row.description" placement="top" effect="light">
-              <span class="highlight">{{ scope.row.description }}</span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="比对状态" prop="change" sortable>
-          <template #default="scope">
-            <el-tag :type="getChangeStatus(scope.row.change)">
-              {{ changeMap[scope.row.change] }}
-            </el-tag>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="操作" align="center">
-          <template #default="scope">
-            <el-button size="small" style="margin: 0 0 10px 10px;" @click="singleComfirm(scope.row)">确认</el-button>
-            <el-button size="small" style="margin: 0 0 10px 10px;" @click="paramDelete(scope.row)">删除</el-button>
-          </template>
-        </el-table-column>
       </el-table>
     </div>
     <!--表格区域 end-->
@@ -214,10 +119,7 @@ const changeMap = {
   1: '新增',
   2: '自身有变更',
   3: '同类有变更',
-  4: '未找到使用',
-  5: '疑似应为环境变量',
-  6: '测试与生产不一致',
-  7: '疑似应为版本变量'
+  4: '未找到使用'
 }
 
 // 批量确认状态
@@ -253,30 +155,40 @@ const state = reactive({
 
 })
 
-const loadData = async (data) => {
+const theTable = [
+{
+    namespace: 'approle',
+    parameterKey: 'SWH_DATASOURCE_TYPE',
+    comment: '数据库类型开关',
+    status:'无效变量'
+  },
+  {
+    namespace: 'custom',
+    parameterKey: 'PRM_JWT_HEADER',
+    comment: 'jwt标头',
+    status:'无效变量'
+  },
+  {
+    namespace: 'application',
+    parameterKey: 'ENV_REDIS_HOST',
+    comment: 'Redis地址',
+    status:'无效变量'
+  }
+]
+
+const loadData = async () => {
   state.loading = true
   // 先清空数据
   state.tableData = []
   state.tempTableData = []
-  if (data.data) {
-    state.tableData = data.data
-    state.tempTableData = data.data
-  }
-
-  // 若功能环境或回装环境和生产环境不一致,且change不为2或3,将change状态设置为6
-  for (let i = 0; i < state.tableData.length; i++) {
-    if (state.tableData[i].valueFunc !== state.tableData[i].valueProd && state.tableData[i].change !== 2 && state.tableData[i].change !== 3) {
-      state.tableData[i].change = 6
-    }
-
-    state.loading = false
-    state.showTable = true
-  }
-
-    // 将第二条数据的change状态设置为7
-    if (state.tableData.length > 0) {
-    state.tableData[0].change = 5
-  }
+  // if (data.data) {
+  //   state.tableData = data.data
+  //   state.tempTableData = data.data
+  // }
+  state.tableData = theTable
+  state.tempTableData = theTable
+  state.loading = false
+  state.showTable = true
 }
 
 // 比对状态
@@ -286,22 +198,7 @@ const loadData = async (data) => {
 //   3: '同类有变更',
 //   4: '未找到使用'
 const tableRowClassName = ({ row, rowIndex }) => {
-  if (row.change === 1) {
-    return 'add'
-  }
-  else if (row.change === 2) {
-    return 'self'
-  }
-  else if (row.change === 3) {
-    return 'same'
-  }
-  else if (row.change === 4) {
-    return 'not-found'
-  }
-  else if (row.change === 5) {
-    return 'self'
-  }
-  else if (row.change === 6) {
+  if (row.status === '无效变量') {
     return 'self'
   }
   return '';
@@ -318,14 +215,6 @@ const getChangeStatus = (status) => {
     return 'danger'
   }
   else if (status === 4) {
-    return 'warning'
-  }
-
-  else if (status === 5) {
-    return 'warning'
-  }
-
-  else if (status === 6) {
     return 'warning'
   }
 }
@@ -803,15 +692,6 @@ const { tableData, loading, searchValue, showTable, parentName, categoryName, co
 </script>
 
 <style scoped>
-.ellipsis {
-  display: inline-block;
-  max-width: 100px;
-  /* 设置最大宽度 */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /*标识参数状态*/
 :deep(.el-table .add) {
   background: #f0f0f080;

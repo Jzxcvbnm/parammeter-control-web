@@ -1,7 +1,7 @@
 <template>
   <el-dropdown trigger="hover">
     <el-button size="small" color="#484848">
-      <span>更多</span>
+      <span>应用:F-BAM-DAS</span>
       <el-icon class="el-icon--right"><arrow-down /></el-icon>
     </el-button>
     <template #dropdown>

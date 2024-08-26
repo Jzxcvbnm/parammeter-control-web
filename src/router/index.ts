@@ -70,23 +70,43 @@ export const asyncRoutes = [
         path: '/param_check_menu',
         name: 'param_check_menu',
         meta: {
+            title: '参数验证',
+            icon: 'Tickets',
             auth: 'PARAM_CHECK'
         },
+        redirect: "/param_check_menu",
         component: ()=> import('../views/layout/Index.vue'),
-        redirect: "/param_check",
         isMenu: true,
-        funcNode:1,
+        funcNode:2,
         children: [
             {
-                path: '/param_check',
-                name: 'param_check',
+                path: 'param_check1',
+                name: 'param_check1',
                 meta: {
-                    title: '参数比对',
-                    icon: 'Tickets',
+                    title: '变量准确性校验',
                     auth: 'PARAM_CHECK'
                 },
                 component: ()=> import('../views/paramCheck/ParamCheck.vue')
-            }
+            },
+            {
+                path: 'param_check2',
+                name: 'param_check2',
+                meta: {
+                    title: '冗余变量识别',
+                    auth: 'PARAM_CHECK'
+                },
+                component: ()=> import('../views/paramCheck1/ParamCheck.vue')
+            },
+            {
+                path: 'param_check3',
+                name: 'param_check3',
+                meta: {
+                    title: '无效变量识别',
+                    auth: 'PARAM_CHECK'
+                },
+                component: ()=> import('../views/paramCheck2/ParamCheck.vue')
+            },
+
         ]
     },
     {

@@ -1,13 +1,13 @@
 <template>
-  <div class="home">
+  <!-- <div class="home">
     <div class="top_bg">
-      <h1>欢迎登录参数治理管控平台</h1>
+      <h1>欢迎登录参数治理管控平台</h1> -->
       <!-- <p>当前登录用户：{{ userName }}（用户ID：{{ userId }}）</p> -->
-    </div>
+    <!-- </div>
     <div class="date_time">
       {{ currentDateTime }}
     </div>
-  </div>
+  </div> -->
 </template>
 
 <script setup lang="ts">
