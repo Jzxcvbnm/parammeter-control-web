@@ -73,3 +73,11 @@ export function deleteChecklist(data) {
         data
     })
 }
+
+// 获取参数总体视图信息
+export function getParamTotalView() {
+    return request({
+        url: '/param_info/category/totalView',
+        method: 'get',
+    })
+}
