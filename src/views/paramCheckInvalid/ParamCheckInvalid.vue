@@ -40,12 +40,12 @@
         </el-col>
         <el-col :span="12" style="margin-bottom: 5px; text-align: right;">
           <el-button type="primary" @click="exportExcelData2" color="#00B890"
-            style="width: 125px;">导出版本变量excel</el-button>
+            style="width: 125px;">导出无效变量excel</el-button>
         </el-col>
       </el-row>
       <el-table element-loading-text="数据加载中..." v-loading="loading" ref="multipleTable" :data="tableData"
         style="width: 100%;text-align: center" :row-class-name="tableRowClassName"
-        @selection-change="handleSelectionChange" :default-sort="{ prop: '', order: 'ascending' }"
+        :default-sort="{ prop: '', order: 'ascending' }"
         :cell-style="{ textAlign: 'center' }"
         :header-cell-style="{ fontSize: '12px', background: '#484848', color: 'white', textAlign: 'center' }">
 
@@ -104,23 +104,7 @@ import { onMounted, reactive, toRefs, ref } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElNotification, ElMessageBox, ElLoading } from 'element-plus'
 import { exportExcel } from "../../utils/exprotExcel"
-import { paramCheck, saveComparelist } from '../../api/param/paramCheck';
-
-
-// 状态映射
-const compareStatusMap = {
-  0: '未确认',
-  1: '已确认',
-}
-
-// 比对状态
-const changeMap = {
-  0: '正常',
-  1: '新增',
-  2: '自身有变更',
-  3: '同类有变更',
-  4: '未找到使用'
-}
+import { paramCheck, paramCheckInvalid } from '../../api/param/paramCheck';
 
 // 批量确认状态
 const multipleSelection = []
@@ -176,7 +160,7 @@ const theTable = [
   }
 ]
 
-const loadData = async () => {
+const loadData = async (data) => {
   state.loading = true
   // 先清空数据
   state.tableData = []
@@ -191,42 +175,11 @@ const loadData = async () => {
   state.showTable = true
 }
 
-// 比对状态
-//   0: '正常',
-//   1: '新增',
-//   2: '自身有变更',
-//   3: '同类有变更',
-//   4: '未找到使用'
 const tableRowClassName = ({ row, rowIndex }) => {
   if (row.status === '无效变量') {
     return 'self'
   }
   return '';
-}
-
-const getChangeStatus = (status) => {
-  if (status === 1) {
-    return 'info'
-  }
-  else if (status === 2) {
-    return 'danger'
-  }
-  else if (status === 3) {
-    return 'danger'
-  }
-  else if (status === 4) {
-    return 'warning'
-  }
-}
-
-// 标识参数状态
-const getStatusType = (status) => {
-  if (status === 0) {
-    return 'warning'
-  }
-  else if (status === 1) {
-    return 'success'
-  }
 }
 
 // 验证参数并进行搜索
@@ -333,7 +286,7 @@ const confirmUpload = async () => {
 
   try {
     const response = await paramCheck(formData)
-
+    // const response = await paramCheckInvalid(formData)
 
     // selectedFile.value = null
     filePath.value = ''
@@ -374,303 +327,25 @@ const cancelUploadConfig = () => {
   filePath.value = ''
 }
 
-// 确认删除参数信息
-const paramDelete = (row) => {
-  ElMessageBox.confirm(
-    '此操作将删除该记录, 是否继续?',
-    '提示',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
-  ).then(() => {
-    // 直接在tableData中删除对应的行
-    const index = tableData.value.findIndex(item => item.id === row.id);
-    if (index !== -1) {
-      tableData.value.splice(index, 1);
-      ElMessage({
-        type: 'success',
-        message: '删除成功!',
-      });
-    } else {
-      ElMessage({
-        type: 'error',
-        message: '未找到对应记录',
-      });
-    }
-  }).catch(() => {
-    ElMessage({
-      type: 'info',
-      message: '已取消删除',
-    });
-  });
-};
-
-// 处理多选框选中事件
-const handleSelectionChange = (val) => {
-  // 清空 multipleSelection 数组
-  multipleSelection.splice(0, multipleSelection.length);
-
-  // 遍历传入的 val 数组
-  for (let i = 0; i < val.length; i++) {
-    // 将 val 数组中每个元素添加到 multipleSelection 数组中
-    multipleSelection.push(val[i]);
-  }
-};
-
-// 批量确认
-const batchConfirm = () => {
-  if (multipleSelection.length === 0) {
-    ElMessage({
-      type: 'error',
-      message: '请选择需要确认的参数',
-    })
-  }
-
-  else {
-    ElMessageBox.confirm(
-      '此操作将确认所选参数, 是否继续?',
-      '提示',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    ).then(async () => {
-      const { data } = await saveComparelist(multipleSelection)
-      if (data.code === 200) {
-        ElMessage({
-          type: 'success',
-          message: '批量确认成功!',
-        })
-
-        // 修改对应行的参数状态
-        for (let i = 0; i < multipleSelection.length; i++) {
-          const index = state.tableData.findIndex(item => item.id === multipleSelection[i].id);
-          if (index !== -1) {
-            state.tableData[index].compareStatus = 1;
-          }
-        }
-
-        // 修改对应行的生产环境
-        // state.tableData[state.tableData.findIndex(item => item.id === row.id)].valueProd = row.newValue;
-        for (let i = 0; i < multipleSelection.length; i++) {
-          const index = state.tableData.findIndex(item => item.id === multipleSelection[i].id);
-          if (index !== -1) {
-            state.tableData[index].valueProd = multipleSelection[i].newValue;
-          }
-        }
-
-        // 清空多选框
-        multipleTable.value.clearSelection();
-
-        // 更新tempTableData
-        state.tempTableData[state.tempTableData.findIndex(item => item.id === row.id)].compareStatus = 1;
-
-      } else {
-        ElMessage({
-          type: 'error',
-          message: data.msg,
-        })
-      }
-    }).catch(() => {
-      ElMessage({
-        type: 'info',
-        message: '已取消确认',
-      })
-    })
-  }
-}
-
-// 批量删除
-const batchDelete = () => {
-  if (multipleSelection.length === 0) {
-    ElMessage({
-      type: 'error',
-      message: '请选择需要删除的参数',
-    })
-  }
-
-  else {
-    ElMessageBox.confirm(
-      '此操作将删除所选参数, 是否继续?',
-      '提示',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    ).then(() => {
-      // 直接在tableData中删除对应的行
-      for (let i = 0; i < multipleSelection.length; i++) {
-        const index = state.tableData.findIndex(item => item.id === multipleSelection[i].id);
-        if (index !== -1) {
-          state.tableData.splice(index, 1);
-        }
-      }
-
-      // 清空多选框
-      multipleTable.value.clearSelection();
-
-      // 更新tempTableData
-      for (let i = 0; i < multipleSelection.length; i++) {
-        const index = state.tempTableData.findIndex(item => item.id === multipleSelection[i].id);
-        if (index !== -1) {
-          state.tempTableData.splice(index, 1);
-        }
-      }
-
-      ElMessage({
-        type: 'success',
-        message: '批量删除成功!',
-      })
-    }).catch(() => {
-      ElMessage({
-        type: 'info',
-        message: '已取消删除',
-      })
-    })
-  }
-}
-
-// 单条确认
-const singleComfirm = (row) => {
-  if (row === null) {
-    ElMessage({
-      type: 'error',
-      message: '请选择需要确认的参数',
-    })
-  }
-
-  else {
-    ElMessageBox.confirm(
-      '此操作将确认所选参数, 是否继续?',
-      '提示',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    ).then(async () => {
-      const singleSelection = []
-      singleSelection.push(row)
-      const { data } = await saveComparelist(singleSelection)
-      if (data.code === 200) {
-        ElMessage({
-          type: 'success',
-          message: '确认成功!',
-        })
-
-        // 修改对应行的参数状态
-        state.tableData[state.tableData.findIndex(item => item.id === row.id)].compareStatus = 1;
-        // 修改对应行的生产环境
-        state.tableData[state.tableData.findIndex(item => item.id === row.id)].valueProd = row.newValue;
-
-        // 清空该行的多选框
-        // multipleTable.value.clearSelection();
-
-        // 更新tempTableData
-        state.tempTableData[state.tempTableData.findIndex(item => item.id === row.id)].compareStatus = 1;
-
-      } else {
-        ElMessage({
-          type: 'error',
-          message: data.msg,
-        })
-      }
-    }).catch(() => {
-      ElMessage({
-        type: 'info',
-        message: '已取消确认',
-      })
-    })
-  }
-}
-
-// 比对信息表格
-const column1 = [
-  {
-    label: '一级分类',
-    name: 'parentName',
-  },
-  {
-    label: '二级分类',
-    name: 'categoryName',
-  },
-  {
-    label: '参数状态',
-    name: 'compareStatus',
-  },
-  {
-    label: '命名空间',
-    name: 'namespace',
-  },
-  {
-    label: '参数变量名',
-    name: 'parameterKey',
-  },
-  {
-    label: '参数值(功能环境)',
-    name: 'valueFunc',
-  },
-  {
-    label: '参数值(回装环境)',
-    name: 'valueReinstall',
-  },
-  {
-    label: '参数值(生产环境)',
-    name: 'valueProd',
-  },
-  {
-    label: '变量描述',
-    name: 'description',
-  },
-  {
-    label: '比对状态',
-    name: 'change',
-  },
-]
-
-// 参数信息表格
+// 无效信息表格
 const column2 = [
   {
     label: '命名空间',
-    name: 'namespace',
+    name:'namespace',
   },
   {
-    label: '参数变量名',
-    name: 'parameterKey',
+    label: '参数名称',
+    name:'parameterKey',
   },
   {
-    label: '参数值(功能环境)',
-    name: 'valueFunc',
+    label: '参数描述',
+    name:'comment',
   },
   {
-    label: '参数值(回装环境)',
-    name: 'valueReinstall',
-  },
-  {
-    label: '参数值(生产环境)',
-    name: 'valueProd',
-  },
-
-  {
-    label: '变量描述',
-    name: 'description',
+    label: '参数状态',
+    name:'status',
   },
 ]
-
-// 导出比对信息excel
-const exportExcelData1 = () => {
-  exportExcel({
-    column: column1,
-    data: state.tableData,
-    filename: '参数比对信息',
-    format: 'xlsx',
-    autoWidth: true,
-  })
-}
 
 // 导出参数信息excel
 const exportExcelData2 = () => {

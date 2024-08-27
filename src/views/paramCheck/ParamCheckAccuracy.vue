@@ -82,15 +82,6 @@
         <el-table-column label="二级分类" prop="categoryName" sortable>
         </el-table-column>
 
-        <!-- <el-table-column label="参数状态" prop="compareStatus" sortable>
-          <template #default="scope">
-            <el-tag :type="getStatusType(scope.row.compareStatus)">
-              {{ compareStatusMap[scope.row.compareStatus] }}
-            </el-tag>
-          </template>
-        </el-table-column> -->
-
-
         <el-table-column label="命名空间" prop="namespace" sortable>
         </el-table-column>
 

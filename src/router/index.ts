@@ -80,31 +80,31 @@ export const asyncRoutes = [
         funcNode:2,
         children: [
             {
-                path: 'param_check1',
-                name: 'param_check1',
+                path: 'param_check_accuracy',
+                name: 'param_check_accuracy',
                 meta: {
                     title: '变量准确性校验',
                     auth: 'PARAM_CHECK'
                 },
-                component: ()=> import('../views/paramCheck/ParamCheck.vue')
+                component: ()=> import('../views/paramCheck/ParamCheckAccuracy.vue')
             },
             {
-                path: 'param_check2',
-                name: 'param_check2',
+                path: 'param_check_redundancy',
+                name: 'param_check_redundancy',
                 meta: {
                     title: '冗余变量识别',
                     auth: 'PARAM_CHECK'
                 },
-                component: ()=> import('../views/paramCheck1/ParamCheck.vue')
+                component: ()=> import('../views/paramCheckRedundancy/ParamCheckRedundancy.vue')
             },
             {
-                path: 'param_check3',
-                name: 'param_check3',
+                path: 'param_check_invalid',
+                name: 'param_check_invalid',
                 meta: {
                     title: '无效变量识别',
                     auth: 'PARAM_CHECK'
                 },
-                component: ()=> import('../views/paramCheck2/ParamCheck.vue')
+                component: ()=> import('../views/paramCheckInvalid/ParamCheckInvalid.vue')
             },
 
         ]
