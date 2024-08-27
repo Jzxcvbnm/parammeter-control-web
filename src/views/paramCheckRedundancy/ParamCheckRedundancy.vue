@@ -162,24 +162,24 @@ const theTable = [
     namespace: 'application',
     parameterKey: 'ENV_REDIS_HOST',
     compareStatus: 0,
-    similarValue: 'ENV_REDIS_HOST',
-    allsimilarValue: 'application'
+    similarValue: 'PRM_REDIS_HOST',
+    allsimilarValue: 'custom'
 
   },
   {
     namespace: 'application',
     parameterKey: 'SWH_DATASOURCE_TYPE',
     compareStatus: 0,
-    similarValue: 'SWH_DATASOURCE_TYPE',
-    allsimilarValue: 'application'
+    similarValue: 'PRM_DATASOURCE_TYPE',
+    allsimilarValue: 'custom'
 
   },
   {
     namespace: 'application',
     parameterKey: 'ENV_REDIS_HOST',
     compareStatus: 0,
-    similarValue: 'ENV_REDIS_HOST',
-    allsimilarValue: 'application'
+    similarValue: 'PRM_REDIS_HOST',
+    allsimilarValue: 'custom'
 
   },
   {

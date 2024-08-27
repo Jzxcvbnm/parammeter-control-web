@@ -141,7 +141,7 @@ const state = reactive({
 
 const theTable = [
 {
-    namespace: 'approle',
+    namespace: 'custom',
     parameterKey: 'SWH_DATASOURCE_TYPE',
     comment: '数据库类型开关',
     status:'无效变量'
