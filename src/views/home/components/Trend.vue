@@ -45,7 +45,8 @@ let props = defineProps({
 const options = {
     title: {
         text: 'F-BAM-DAS变化趋势图',
-        left: 'center'
+        left: 'center',
+        top:'5%'
     },
     tooltip: {
         trigger: 'axis',
@@ -56,17 +57,11 @@ const options = {
             }
         }
     },
-    // toolbox: {
-    //     feature: {
-    //         dataView: { show: true, readOnly: false },
-    //         magicType: { show: true, type: ['line', 'bar'] },
-    //         restore: { show: true },
-    //         saveAsImage: { show: true }
-    //     }
-    // },
-    // legend: {
-    //     data: props.legendData
-    // },
+
+    legend: {
+        data: props.legendData,
+        top: '10%',
+    },
     xAxis: [
         {
             type: 'category',
@@ -100,7 +95,11 @@ const options = {
             },
             data: [
                 320, 480, 640, 780
-            ]
+            ],
+            label: {
+                show: true,
+
+            }
         },
         {
             name: '版本变量',
@@ -112,7 +111,10 @@ const options = {
             },
             data: [
                 780, 1020, 1350, 1469
-            ]
+            ],
+            label: {
+                show: true,
+            }
         },
     ]
 };

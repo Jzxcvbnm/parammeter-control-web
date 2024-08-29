@@ -266,7 +266,7 @@ const loadData = async (data) => {
 
     // 将第二条数据的change状态设置为7
     if (state.tableData.length > 0) {
-    state.tableData[0].change = 5
+    state.tableData[0].change = 7
   }
 }
 

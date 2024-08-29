@@ -91,7 +91,11 @@ const options = {
     series: {
         type: 'bar',
         encode: { x: 'freq', y: 'param' },
-        datasetIndex: 1
+        datasetIndex: 1,
+        label: {
+            show: true,
+            position: 'right' // 设置标签显示在柱的右侧
+        }
     }
 };
 
